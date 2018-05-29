@@ -74,7 +74,7 @@ public abstract class Ghost extends Live {
 			public int update() {
 				return dir;
 			}
-
+			
 			@Override
 			public int onTurn() {
 				if (mode == box)
