@@ -4,8 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.pacman.input.Controller;
-
-import methods.P;
+import com.pacman.utils.ActionList;
 
 public class PacMan extends Live {
 	
@@ -22,6 +21,7 @@ public class PacMan extends Live {
 	public PacMan(float x, float y) {
 		super(x, y, 13, 13);
 		setController(controller());
+		super.setAnimation(eat());
 		this.phase = 1;
 		super.setDelay(Entity.animationDelta);
 	}
@@ -40,25 +40,48 @@ public class PacMan extends Live {
 		}
 		if (Ghost.is(e)) {
 			if (dist(e) <= killDistance) {
-				if (((Ghost) e).mode() == Ghost.chase) {
+				Ghost g = (Ghost) e;
+				if (g.mode() == Ghost.chase) {
 					mode = die;
 					phase = 0;
 					game().kill();
+					super.setAnimation(die());
 				}
-				else
-					return;
+				else if (g.mode() == Ghost.scared) {
+					game().pause(500);
+					g.die();
+				}
 			}
 		}
 	}
 	
-	@Override
-	public void updateState() {
-		if (mode == eat)
-			phase = (phase + 1) % 4;
-		else
-			phase = (phase + 1) % 11;
+	private ActionList eat() {
+		ActionList actions = new ActionList();
+		actions.loop();
+		actions.add(() -> phase = 0);
+		actions.add(() -> phase = 1);
+		actions.add(() -> phase = 2);
+		actions.add(() -> phase = 1);
+		return actions;
 	}
-
+	
+	private ActionList die() {
+		ActionList actions = new ActionList();
+		actions.add(() -> phase = 0, 6);
+		actions.add(() -> phase++, 1);
+		actions.add(() -> phase++, 1);
+		actions.add(() -> phase++, 1);
+		actions.add(() -> phase++, 1);
+		actions.add(() -> phase++, 1);
+		actions.add(() -> phase++, 1);
+		actions.add(() -> phase++, 1);
+		actions.add(() -> phase++, 1);
+		actions.add(() -> phase++, 1);
+		actions.add(() -> phase++, 1);
+		actions.add(() -> setVisible(false), 1);
+		return actions;
+	}
+	
 	@Override
 	public TextureRegion texture() {
 		if (mode == eat)

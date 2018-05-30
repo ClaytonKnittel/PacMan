@@ -1,18 +1,10 @@
 package com.pacman;
 
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.pacman.entities.Blinky;
-import com.pacman.entities.Clyde;
-import com.pacman.entities.Entity;
-import com.pacman.entities.Ghost;
-import com.pacman.entities.Inky;
-import com.pacman.entities.PacMan;
-import com.pacman.entities.Pinky;
-import com.pacman.entities.Target;
+import com.pacman.entities.*;
 import com.pacman.graphics.Board;
 import com.pacman.utils.ActionTimer;
 
-import methods.P;
 import structures.CategorySet;
 import structures.LList;
 
@@ -21,21 +13,24 @@ public class Game {
 	private Board board;
 	private LList<Entity> entities;
 	private CategorySet<Entity> tiles;
+	private Score score;
+	
 	private Target target;
 	public static Entity tar;
+	
 	private PacMan pacman;
 	private Ghost pinky, blinky, inky, clyde;
 	
 	private ActionTimer events;
 	
 	private long lastTime;
+	private long paused;
 	
 	public static final int chase = 0, hide = 1, blue = 2, dead = 3;
-	private int mode;
 	
 	public Game(int width, int height) {
 		entities = new LList<Entity>();
-		board = new Board(width, height);
+		board = new Board(width, height - 30);
 		
 		tiles = new CategorySet<>(board.size(), e -> e.getTiles());
 		
@@ -45,7 +40,10 @@ public class Game {
 		
 		target = new Target(100, 100);
 		
+		score = new Score(0, height - 30, width, 30);
+		
 		lastTime = System.currentTimeMillis();
+		paused = 0;
 	}
 	
 	public Board board() {
@@ -74,33 +72,52 @@ public class Game {
 	}
 	
 	public void start() {
-		mode = chase;
 		entities.clear();
 		tiles.clear();
 		genEntities();
-		
+		chase(1);
+	}
+	
+	public void chase(int delays) {
 		events = new ActionTimer();
-		events.add(() -> blinky.setMode(Ghost.chase), 1);
-		events.add(() -> pinky.setMode(Ghost.chase), 1);
-		events.add(() -> inky.setMode(Ghost.chase), 1);
-		events.add(() -> clyde.setMode(Ghost.chase), 1);
+		events.add(() -> blinky.setMode(Ghost.chase), delays);
+		events.add(() -> pinky.setMode(Ghost.chase), delays);
+		events.add(() -> inky.setMode(Ghost.chase), delays);
+		events.add(() -> clyde.setMode(Ghost.chase), delays);
 	}
 	
 	public void scare() {
-		mode = blue;
-		P.pl("FE");
 		pinky.setMode(Ghost.scared);
 		blinky.setMode(Ghost.scared);
 		inky.setMode(Ghost.scared);
 		clyde.setMode(Ghost.scared);
+		
+		Ghost.resetPoints();
+		
+		events = new ActionTimer();
+		events.add(() -> chase(0), 6);
 	}
 	
 	public void kill() {
-		mode = dead;
 		pinky.setMode(Ghost.stop);
 		blinky.setMode(Ghost.stop);
 		inky.setMode(Ghost.stop);
 		clyde.setMode(Ghost.stop);
+		
+		events = new ActionTimer();
+		events.add(() -> start(), 3.5f);
+	}
+	
+	public void pause(long millis) {
+		paused = millis;
+	}
+	
+	public void add(int points) {
+		score.add(points);
+	}
+	
+	public boolean paused() {
+		return paused > 0;
 	}
 	
 	public PacMan pacman() {
@@ -126,19 +143,27 @@ public class Game {
 	public void draw(Batch batch) {
 		batch.draw(board.texture(), 0, 0);
 		long now = System.currentTimeMillis();
+		long diff = now - lastTime;
 		
 		events.check();
-
-		for (Entity e : entities.delIter(e -> e.deleted()))
-			e.update(now - lastTime);
 		
-		tiles.clearDeleted(e -> e.deleted());
-		tiles.actAll((a, b) -> a.interact(b));
-		target.set(((Ghost) tar).target());
+		if (paused > 0) {
+			paused -= diff;
+			if (paused <= 0)
+				paused = 0;
+		} else {
+			for (Entity e : entities.delIter(e -> e.deleted()))
+				e.update(diff);
+			
+			tiles.clearDeleted(e -> e.deleted());
+			tiles.actAll((a, b) -> a.interact(b));
+//			target.set(375);
+		}
 		
 		for (Entity e : entities)
 			e.draw(batch, board.tileWidth(), board.tileHeight());
-		target.draw(batch, board.tileWidth(), board.tileHeight());
+//		target.draw(batch, board.tileWidth(), board.tileHeight());
+		score.draw(batch);
 		lastTime = now;
 	}
 	

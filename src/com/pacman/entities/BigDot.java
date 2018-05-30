@@ -10,6 +10,7 @@ public class BigDot extends Entity implements Collectable {
 private static final TextureRegion texture;
 	
 	private static final Color dotColor = new Color(0xdfbab5ff);
+	private static final int value = 50;
 	
 	static {
 		Pixmap p = new Pixmap(16, 16, Pixmap.Format.RGBA8888);
@@ -33,6 +34,7 @@ private static final TextureRegion texture;
 	public void collect() {
 		delete();
 		game().scare();
+		game().add(value);
 	}
 
 	public TextureRegion texture() {

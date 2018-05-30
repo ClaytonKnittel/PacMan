@@ -14,7 +14,7 @@ public class Main extends ApplicationAdapter {
 	
 	@Override
 	public void create() {
-		Gdx.graphics.setWindowedMode(448, 496);
+		Gdx.graphics.setWindowedMode(448, 526);
 		width = Gdx.graphics.getWidth();
 		height = Gdx.graphics.getHeight();
 		

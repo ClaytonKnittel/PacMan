@@ -16,6 +16,10 @@ public class Timer {
 		this.time = System.currentTimeMillis();
 	}
 	
+	public void set(long l) {
+		this.time = l;
+	}
+	
 	public void setBack(long time) {
 		this.time += time;
 	}

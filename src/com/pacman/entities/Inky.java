@@ -1,6 +1,5 @@
 package com.pacman.entities;
 
-import methods.P;
 import tensor.Vector2;
 
 public class Inky extends Ghost {

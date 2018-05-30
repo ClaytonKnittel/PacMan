@@ -38,6 +38,8 @@ public abstract class Entity implements Drawable {
 	
 	private boolean deleted;
 	
+	private boolean visible;
+	
 	static {
 		spritesheet = new Texture(Gdx.files.internal("/Users/claytonknittel/Documents/workspace/Projects/libgdx/core/assets/pacman_sprite_clear.png"), Format.RGBA8888, false);
 		sprites = new TextureRegion[140];
@@ -67,6 +69,7 @@ public abstract class Entity implements Drawable {
 		this.delay = animationDelta;
 		this.deleted = false;
 		this.lastTexture = null;
+		this.visible = true;
 	}
 	
 	public float x() {
@@ -111,6 +114,10 @@ public abstract class Entity implements Drawable {
 	
 	public int dir() {
 		return dir;
+	}
+	
+	public void setVisible(boolean v) {
+		visible = v;
 	}
 	
 	public boolean forward(float d) {
@@ -238,6 +245,8 @@ public abstract class Entity implements Drawable {
 	}
 	
 	public void draw(Batch batch, float tileWidth, float tileHeight) {
+		if (!visible)
+			return;
 		TextureRegion t = texture();
 		if (t != null)
 			batch.draw(lastTexture = t, x() - tileWidth / 2, y() - tileHeight / 2, tileWidth, tileHeight);
@@ -315,6 +324,14 @@ public abstract class Entity implements Drawable {
 	
 	protected TextureRegion eyeTexture(int direction) {
 		return getTexture(78 + direction);
+	}
+	
+	protected TextureRegion pointsTexture(int points) {
+		return getTexture(111 + points);
+	}
+	
+	protected TextureRegion fruitTexture(int which) {
+		return getTexture(44 + which);
 	}
 	
 	protected TextureRegion getTexture(int i) {

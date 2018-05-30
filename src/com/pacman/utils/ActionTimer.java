@@ -5,9 +5,15 @@ import java.util.LinkedList;
 public class ActionTimer extends Timer {
 	
 	private LinkedList<ActionDelay> actions;
+	private boolean loop;
 	
 	public ActionTimer() {
 		actions = new LinkedList<>();
+		loop = false;
+	}
+	
+	public void loop() {
+		loop = true;
 	}
 	
 	public void add(Action a, float secondsAfter) {
@@ -21,7 +27,9 @@ public class ActionTimer extends Timer {
 		if (super.time() >= a.delay) {
 			a.a.act();
 			super.setBack(a.delay);
-			actions.removeFirst();
+			ActionDelay ad = actions.removeFirst();
+			if (loop)
+				actions.add(ad);
 		}
 	}
 	

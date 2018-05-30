@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 public class Dot extends Entity implements Collectable {
 	
 	private static final TextureRegion texture;
+	private static final int value = 10;
 	
 	private static final Color dotColor = new Color(0xdfbab5ff);
 	
@@ -27,6 +28,7 @@ public class Dot extends Entity implements Collectable {
 	@Override
 	public void collect() {
 		delete();
+		game().add(value);
 	}
 	
 	@Override

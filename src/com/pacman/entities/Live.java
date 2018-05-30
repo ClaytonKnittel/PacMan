@@ -3,12 +3,12 @@ package com.pacman.entities;
 import java.util.LinkedList;
 
 import com.pacman.input.Controller;
-
-import methods.P;
+import com.pacman.utils.ActionList;
 
 public abstract class Live extends Entity {
 	
 	private Controller controller;
+	private ActionList animation;
 	
 	public Live(float x, float y, float width, float height) {
 		super(x, y, width, height);
@@ -16,6 +16,10 @@ public abstract class Live extends Entity {
 	
 	protected void setController(Controller controller) {
 		this.controller = controller;
+	}
+	
+	protected void setAnimation(ActionList a) {
+		animation = a;
 	}
 	
 	public int nextTile() {
@@ -38,8 +42,10 @@ public abstract class Live extends Entity {
 	
 	@Override
 	public final void update(long delta) {
-		if (record(delta))
-			updateState();
+		if (record(delta)) {
+			if (animation != null)
+				animation.next();
+		}
 		move(speed() * delta / 1000f);
 	}
 	
@@ -103,7 +109,5 @@ public abstract class Live extends Entity {
 			return right;
 		return -1;
 	}
-	
-	public abstract void updateState();
 	
 }
