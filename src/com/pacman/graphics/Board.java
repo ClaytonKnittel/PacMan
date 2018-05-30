@@ -272,14 +272,47 @@ public class Board implements Drawable {
 	}
 	
 	public IVector2 newPos(IVector2 pos, int dir) {
+		if (isTeleporter(pos)) {
+			if (dir == Entity.right && pos.x() >= texWidth - 1)
+				return pos.minus(texWidth - 1, 0);
+			if (dir == Entity.left && pos.x() <= 0)
+				return pos.plus(texWidth - 1, 0);
+			if (dir == Entity.up && pos.y() <= 0)
+				return pos.plus(0, texHeight - 1);
+			if (dir == Entity.down && pos.y() >= texHeight - 1)
+				return pos.minus(0, texHeight - 1);
+		}
 		return pos.plus(dirVec(dir));
+	}
+	
+	public boolean offScreen(IVector2 pos, int dir) {
+		switch(dir) {
+		case Entity.left:
+			return pos.x() <= 0;
+		case Entity.right:
+			return pos.x() >= texWidth - 1;
+		case Entity.up:
+			return pos.y() <= 0;
+		case Entity.down:
+			return pos.y() >= texHeight - 1;
+		}
+		return false;
+	}
+	
+	public Vector2 reflectX(Vector2 vec) {
+		if (vec.x() < width / 2)
+			return vec.plus(width, 0);
+		return vec.minus(width, 0);
+	}
+	
+	public Vector2 reflectY(Vector2 vec) {
+		if (vec.y() < height / 2)
+			return vec.plus(0, height);
+		return vec.minus(0, height);
 	}
 	
 	public boolean isWall(IVector2 pos, int dir) {
 		IVector2 newPos = newPos(pos, dir);
-		if (isTeleporter(pos)) {
-			return !isPermeable(newPos);
-		}
 		if (!oob(newPos))
 			return !isPermeable(newPos);
 		return true;
@@ -292,9 +325,6 @@ public class Board implements Drawable {
 	
 	public boolean isGWall(IVector2 pos, int dir) {
 		IVector2 newPos = newPos(pos, dir);
-		if (isTeleporter(pos)) {
-			return !isGhostPermeable(newPos);
-		}
 		if (!oob(newPos))
 			return !isGhostPermeable(newPos);
 		return true;

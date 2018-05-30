@@ -12,7 +12,6 @@ import com.pacman.graphics.Board;
 import com.pacman.graphics.Drawable;
 
 import algorithms.Dijkstra;
-import methods.P;
 import structures.CategorySet;
 import tensor.IVector2;
 import tensor.Vector2;
@@ -174,7 +173,7 @@ public abstract class Entity implements Drawable {
 	}
 	
 	protected void flipD() {
-		if (dir > 1)
+		if (vertDir(dir))
 			d = board.tileHeight() - d;
 		else
 			d = board.tileWidth() - d;
@@ -256,6 +255,13 @@ public abstract class Entity implements Drawable {
 			batch.draw(lastTexture = t, pos.x(), pos.y(), tileWidth, tileHeight);
 		else
 			batch.draw(lastTexture, pos.x(), pos.y(), tileWidth, tileHeight);
+		if (board().offScreen(this.pos, dir)) {
+			if (vertDir(dir))
+				pos = board().reflectY(pos);
+			else
+				pos = board().reflectX(pos);
+			batch.draw(lastTexture, pos.x(), pos.y(), tileWidth, tileHeight);
+		}
 	}
 	
 	public static final int pacman = 0, red = 56, blue = 84, yellow = 98;
@@ -275,6 +281,10 @@ public abstract class Entity implements Drawable {
 			return "down";
 		}
 		return "[not a direction]";
+	}
+	
+	public static boolean vertDir(int dir) {
+		return dir > 1;
 	}
 	
 	public static int sequentialDir(int dir) {

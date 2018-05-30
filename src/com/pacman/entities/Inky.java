@@ -18,8 +18,11 @@ public class Inky extends Ghost {
 	}
 	
 	protected IVector2 chaseTarget() {
+		IVector2 blinkyTar = blinky.target();
+		if (blinkyTar == null)
+			return null;
 		Vector2 v = blinky.screenPos();
-		Vector2 d = board().screenPos(blinky.target());
+		Vector2 d = board().screenPos(blinkyTar);
 		v = d.minus(v);
 		d = d.plus(v);
 		float width = board().width() - board().tileWidth() / 2;
