@@ -1,25 +1,25 @@
 package com.pacman.entities;
 
+import tensor.IVector2;
 import tensor.Vector2;
 
 public class Inky extends Ghost {
 	
-	private int startingPos;
+	private IVector2 startingPos;
 	private Ghost blinky;
 	
 	public Inky(float x, float y) {
 		super(x, y, 13, 13, Entity.inky);
-		startingPos = board().boardPos(x, y);
+		startingPos = new IVector2(pos());
 	}
 	
 	public void setBlinky(Ghost blinky) {
 		this.blinky = blinky;
 	}
 	
-	protected int chaseTarget() {
-		Vector2 v = new Vector2(blinky.x(), blinky.y());
-		int target = blinky.target();
-		Vector2 d = new Vector2(board().screenX(target), board().screenY(target));
+	protected IVector2 chaseTarget() {
+		Vector2 v = blinky.screenPos();
+		Vector2 d = board().screenPos(blinky.target());
 		v = d.minus(v);
 		d = d.plus(v);
 		float width = board().width() - board().tileWidth() / 2;
@@ -47,11 +47,11 @@ public class Inky extends Ghost {
 		return board().nearest(d.x(), d.y());
 	}
 	
-	protected int boxTarget() {
+	protected IVector2 boxTarget() {
 		return startingPos;
 	}
 	
-	protected int cornerTarget() {
-		return 0;
+	protected IVector2 cornerTarget() {
+		return IVector2.ZERO;
 	}
 }

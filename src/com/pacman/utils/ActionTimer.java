@@ -20,6 +20,10 @@ public class ActionTimer extends Timer {
 		actions.add(new ActionDelay(a, (long) (secondsAfter * 1000)));
 	}
 	
+	public boolean empty() {
+		return actions.isEmpty();
+	}
+	
 	public void check() {
 		if (actions.size() == 0)
 			return;

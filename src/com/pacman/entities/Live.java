@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import com.pacman.input.Controller;
 import com.pacman.utils.ActionList;
 
+import tensor.IVector2;
+
 public abstract class Live extends Entity {
 	
 	private Controller controller;
@@ -22,10 +24,10 @@ public abstract class Live extends Entity {
 		animation = a;
 	}
 	
-	public int nextTile() {
+	public IVector2 nextTile() {
 		if (d() == 0)
-			return tile();
-		return tile() + board().dTile(dir());
+			return pos();
+		return board().newPos(pos(), dir());
 	}
 	
 	public abstract float speed();
@@ -33,10 +35,10 @@ public abstract class Live extends Entity {
 	@Override
 	public LinkedList<Integer> getTiles() {
 		LinkedList<Integer> ret = new LinkedList<>();
-		ret.add(tile());
-		int n = nextTile();
-		if (n != tile())
-			ret.add(n);
+		ret.add(board().tile(pos()));
+		IVector2 n = nextTile();
+		if (!n.equals(pos()))
+			ret.add(board().tile(n));
 		return ret;
 	}
 	
@@ -54,7 +56,7 @@ public abstract class Live extends Entity {
 	 * @param d
 	 */
 	public boolean setDirIf(int d) {
-		if (canMove(tile(), d)) {
+		if (canMove(pos(), d)) {
 			setDir(d);
 			return true;
 		}
@@ -72,7 +74,7 @@ public abstract class Live extends Entity {
 		if (sharpTurn(controller.dir()))
 			turnAround();
 		if (inNextTile()) {
-			setTile();
+			setPos();
 			if (isDecisionTile())
 				controller.onDecision();
 			else
@@ -86,26 +88,26 @@ public abstract class Live extends Entity {
 	}
 	
 	public void turnAround() {
-		setTile();
+		setPos();
 		setDir(Entity.opposite(dir()));
 		controller.setDir(dir());
 		flipD();
 	}
 	
-	private boolean canMove(int tile, int dir) {
+	private boolean canMove(IVector2 pos, int dir) {
 		if (Ghost.is(this))
-			return !board().isGWall(tile, dir);
-		return !board().isWall(tile, dir);
+			return !board().isGWall(pos, dir);
+		return !board().isWall(pos, dir);
 	}
 	
 	protected int turn() {
-		if (canMove(tile(), up) && dir() != down)
+		if (canMove(pos(), up) && dir() != down)
 			return up;
-		if (canMove(tile(), down) && dir() != up)
+		if (canMove(pos(), down) && dir() != up)
 			return down;
-		if (canMove(tile(), left) && dir() != right)
+		if (canMove(pos(), left) && dir() != right)
 			return left;
-		if (canMove(tile(), right) && dir() != left)
+		if (canMove(pos(), right) && dir() != left)
 			return right;
 		return -1;
 	}

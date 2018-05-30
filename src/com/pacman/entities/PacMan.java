@@ -6,9 +6,13 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.pacman.input.Controller;
 import com.pacman.utils.ActionList;
 
+import tensor.IVector2;
+
 public class PacMan extends Live {
 	
 	private int phase;
+	
+	private IVector2 startingPos;
 	
 	private static final float speed = 60f;
 	private static final float eatDistance = 35;
@@ -20,10 +24,23 @@ public class PacMan extends Live {
 	
 	public PacMan(float x, float y) {
 		super(x, y, 13, 13);
+		startingPos = new IVector2(pos());
 		setController(controller());
-		super.setAnimation(eat());
-		this.phase = 1;
+		phase = 1;
 		super.setDelay(Entity.animationDelta);
+		eatMode();
+	}
+	
+	private void eatMode() {
+		this.mode = eat;
+		setAnimation(eat());
+	}
+	
+	private void kill() {
+		mode = die;
+		phase = 0;
+		game().kill();
+		super.setAnimation(die());
 	}
 	
 	@Override
@@ -31,6 +48,14 @@ public class PacMan extends Live {
 		if (mode == die)
 			return 0;
 		return speed;
+	}
+	
+	public void reset() {
+		setPos(startingPos);
+		setD(0);
+		setDir(up);
+		eatMode();
+		setVisible(true);
 	}
 	
 	public void interact(Entity e, boolean secondCall) {
@@ -42,10 +67,7 @@ public class PacMan extends Live {
 			if (dist(e) <= killDistance) {
 				Ghost g = (Ghost) e;
 				if (g.mode() == Ghost.chase) {
-					mode = die;
-					phase = 0;
-					game().kill();
-					super.setAnimation(die());
+					kill();
 				}
 				else if (g.mode() == Ghost.scared) {
 					game().pause(500);

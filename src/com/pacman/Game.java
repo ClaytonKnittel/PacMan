@@ -4,7 +4,9 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.pacman.entities.*;
 import com.pacman.graphics.Board;
 import com.pacman.utils.ActionTimer;
+import com.pacman.utils.EventList;
 
+import methods.P;
 import structures.CategorySet;
 import structures.LList;
 
@@ -22,6 +24,7 @@ public class Game {
 	private Ghost pinky, blinky, inky, clyde;
 	
 	private ActionTimer events;
+	private EventList eventList;
 	
 	private long lastTime;
 	private long paused;
@@ -42,6 +45,7 @@ public class Game {
 		
 		score = new Score(0, height - 30, width, 30);
 		
+		eventList = new EventList();
 		lastTime = System.currentTimeMillis();
 		paused = 0;
 	}
@@ -78,19 +82,28 @@ public class Game {
 		chase(1);
 	}
 	
+	public void tryAgain() {
+		blinky.reset();
+		pinky.reset();
+		inky.reset();
+		clyde.reset();
+		pacman.reset();
+		chase(1);
+	}
+	
 	public void chase(int delays) {
 		events = new ActionTimer();
-		events.add(() -> blinky.setMode(Ghost.chase), delays);
+		events.add(() -> blinky.setMode(Ghost.chase), delays + 1);
 		events.add(() -> pinky.setMode(Ghost.chase), delays);
 		events.add(() -> inky.setMode(Ghost.chase), delays);
 		events.add(() -> clyde.setMode(Ghost.chase), delays);
 	}
 	
 	public void scare() {
-		pinky.setMode(Ghost.scared);
-		blinky.setMode(Ghost.scared);
-		inky.setMode(Ghost.scared);
-		clyde.setMode(Ghost.scared);
+		pinky.setScareMode(6);
+		blinky.setScareMode(6);
+		inky.setScareMode(6);
+		clyde.setScareMode(6);
 		
 		Ghost.resetPoints();
 		
@@ -105,7 +118,11 @@ public class Game {
 		clyde.setMode(Ghost.stop);
 		
 		events = new ActionTimer();
-		events.add(() -> start(), 3.5f);
+		events.add(() -> tryAgain(), 3.5f);
+	}
+	
+	public EventList eventList() {
+		return eventList;
 	}
 	
 	public void pause(long millis) {
@@ -146,6 +163,7 @@ public class Game {
 		long diff = now - lastTime;
 		
 		events.check();
+		eventList.check();
 		
 		if (paused > 0) {
 			paused -= diff;

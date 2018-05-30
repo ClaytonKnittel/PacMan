@@ -3,6 +3,9 @@ package com.pacman.entities;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.pacman.input.Controller;
 import com.pacman.utils.ActionList;
+import com.pacman.utils.ActionTimer;
+
+import tensor.IVector2;
 
 public abstract class Ghost extends Live {
 	
@@ -49,8 +52,12 @@ public abstract class Ghost extends Live {
 		if (dead)
 			return;
 		this.mode = mode;
-		if (mode == scared)
-			turnAround();
+	}
+	
+	public void setScareMode(float seconds) {
+		this.mode = scared;
+		turnAround();
+		createScareAnimation(seconds);
 	}
 	
 	public static void resetPoints() {
@@ -89,9 +96,29 @@ public abstract class Ghost extends Live {
 	private ActionList animation() {
 		ActionList animation = new ActionList();
 		animation.loop();
-		animation.add(() -> phase = 0);
-		animation.add(() -> phase = 1);
+		animation.add(() -> phase++);
+		animation.add(() -> phase--);
 		return animation;
+	}
+	
+	private void createScareAnimation(float seconds) {
+		ActionTimer a = new ActionTimer();
+		a.add(() -> phase += 2, seconds - 1.75f);
+		a.add(() -> phase -= 2, .25f);
+		a.add(() -> phase += 2, .25f);
+		a.add(() -> phase -= 2, .25f);
+		a.add(() -> phase += 2, .25f);
+		a.add(() -> phase -= 2, .25f);
+		a.add(() -> phase += 2, .25f);
+		a.add(() -> phase -= 2, .25f);
+		game().eventList().add(a);
+	}
+	
+	public void reset() {
+		setPos(boxTarget());
+		mode = box;
+		dead = false;
+		points = 0;
 	}
 	
 	private Controller controller() {
@@ -125,13 +152,13 @@ public abstract class Ghost extends Live {
 			@Override
 			public int onDecision() {
 				int dir;
-				int target = target();
-				if (target == -1)
-					return board().randomDir(tile());
+				IVector2 target = target();
+				if (target == null)
+					return board().randomDir(pos());
 				if (dead && testReturned(target))
 					return onDecision();
 				try {
-					dir = Entity.opposite(graph().shortestPath(tile(), target).getFirst().dir());
+					dir = Entity.opposite(graph().shortestPath(pos(), target).getFirst().dir());
 				} catch (IllegalStateException e) {
 					dir = (int) (Math.random() * 4);
 				}
@@ -140,8 +167,8 @@ public abstract class Ghost extends Live {
 		};
 	}
 	
-	private boolean testReturned(int target) {
-		if (target == tile()) {
+	private boolean testReturned(IVector2 target) {
+		if (target.equals(pos())) {
 			returnedBox();
 			return true;
 		}
@@ -153,14 +180,14 @@ public abstract class Ghost extends Live {
 		dead = false;
 	}
 	
-	public int target() {
+	public IVector2 target() {
 		switch(mode) {
 		case chase:
 		case stop:
 			return chaseTarget();
 		case scared:
 		case point:
-			return -1;
+			return null;
 		case eyes:
 		case box:
 			return boxTarget();
@@ -168,11 +195,11 @@ public abstract class Ghost extends Live {
 		throw new IllegalStateException("Ghost cannot be in state " + mode);
 	}
 	
-	protected abstract int chaseTarget();
+	protected abstract IVector2 chaseTarget();
 	
-	protected abstract int boxTarget();
+	protected abstract IVector2 boxTarget();
 	
-	protected abstract int cornerTarget();
+	protected abstract IVector2 cornerTarget();
 	
 	@Override
 	public TextureRegion texture() {

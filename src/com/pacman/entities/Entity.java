@@ -12,13 +12,17 @@ import com.pacman.graphics.Board;
 import com.pacman.graphics.Drawable;
 
 import algorithms.Dijkstra;
+import methods.P;
 import structures.CategorySet;
+import tensor.IVector2;
+import tensor.Vector2;
 
 public abstract class Entity implements Drawable {
 	
 	private float width, height;
 	
-	private int tile, dir;
+	private IVector2 pos;
+	private int dir;
 	private float d;
 	
 	private static final Texture spritesheet;
@@ -30,7 +34,7 @@ public abstract class Entity implements Drawable {
 	
 	private static Game game;
 	private static Board board;
-	private static Dijkstra<Integer, Board.WeightDir> graph;
+	private static Dijkstra<IVector2, Board.WeightDir> graph;
 	private static CategorySet<Entity> tiles;
 	
 	private long time;
@@ -55,15 +59,14 @@ public abstract class Entity implements Drawable {
 	}
 	
 	public Entity(float x, float y, float width, float height) {
-		tile = board.boardPos(x, y);
-		float bx = board.screenX(tile);
-		float by = board.screenY(tile);
-		if (Math.abs(x - bx) > Math.abs(y - by)) {
-			dir = x - bx > 0 ? 1 : 3;
-			d = Math.abs(x - bx);
+		this.pos = board.boardPos(x, y);
+		Vector2 b = board().screenPos(pos);
+		if (Math.abs(x - b.x()) > Math.abs(y - b.y())) {
+			dir = x - b.x() > 0 ? 1 : 3;
+			d = Math.abs(x - b.x());
 		} else {
-			dir = y - by > 0 ? 0 : 2;
-			d = Math.abs(y - by);
+			dir = y - b.y() > 0 ? 0 : 2;
+			d = Math.abs(y - b.y());
 		}
 		this.time = 0;
 		this.delay = animationDelta;
@@ -72,20 +75,24 @@ public abstract class Entity implements Drawable {
 		this.visible = true;
 	}
 	
-	public float x() {
-		return board.screenX(tile) + dx();
+	public Vector2 screenPos() {
+		return board.screenPos(pos).plus(dPos());
 	}
 	
-	public float y() {
-		return board.screenY(tile) + dy();
+	public IVector2 pos() {
+		return pos;
+	}
+	
+	public int x() {
+		return pos.x();
+	}
+	
+	public int y() {
+		return pos.y();
 	}
 	
 	public float dist(Entity e) {
-		return square(e.x() - x()) + square(e.y() - y());
-	}
-	
-	private static float square(float f) {
-		return f * f;
+		return screenPos().minus(e.screenPos()).mag2();
 	}
 	
 	public float d() {
@@ -104,12 +111,8 @@ public abstract class Entity implements Drawable {
 		return -1;
 	}
 	
-	public float dx() {
-		return Board.dirX(dir) * d;
-	}
-	
-	public float dy() {
-		return Board.dirY(dir) * d;
+	public Vector2 dPos() {
+		return Board.screenDirVec(dir).toVector2().times(d);
 	}
 	
 	public int dir() {
@@ -122,12 +125,12 @@ public abstract class Entity implements Drawable {
 	
 	public boolean forward(float d) {
 		if (Ghost.is(this)) {
-			if (board.isGWall(tile, dir)) {
+			if (board.isGWall(pos, dir)) {
 				this.d = 0;
 				return false;
 			}
 		}
-		else if (board.isWall(tile, dir)) {
+		else if (board.isWall(pos, dir)) {
 			this.d = 0;
 			return false;
 		}
@@ -147,16 +150,20 @@ public abstract class Entity implements Drawable {
 	
 	protected boolean isDecisionTile() {
 		if (Ghost.is(this))
-			return board.numGTurns(tile) > 2;
-		return board.numTurns(tile) > 2;
+			return board.numGTurns(pos) > 2;
+		return board.numTurns(pos) > 2;
 	}
 	
-	protected void setTile(int tile) {
-		this.tile = tile;
+	protected void setPos(IVector2 pos) {
+		setPos(pos.x(), pos.y());
 	}
 	
-	protected void setTile() {
-		tile += Board.dirX(dir) - board.boardWidth() * Board.dirY(dir);
+	protected void setPos(int x, int y) {
+		pos = new IVector2(x, y);
+	}
+	
+	protected void setPos() {
+		pos = board.newPos(pos, dir);
 	}
 	
 	protected void moveD() {
@@ -181,13 +188,9 @@ public abstract class Entity implements Drawable {
 		return height;
 	}
 	
-	public int tile() {
-		return tile;
-	}
-	
 	public LinkedList<Integer> getTiles() {
 		LinkedList<Integer> ret = new LinkedList<>();
-		ret.add(tile());
+		ret.add(board.tile(pos));
 		return ret;
 	}
 	
@@ -216,7 +219,7 @@ public abstract class Entity implements Drawable {
 		return board;
 	}
 	
-	protected Dijkstra<Integer, Board.WeightDir> graph() {
+	protected Dijkstra<IVector2, Board.WeightDir> graph() {
 		return graph;
 	}
 	
@@ -248,10 +251,11 @@ public abstract class Entity implements Drawable {
 		if (!visible)
 			return;
 		TextureRegion t = texture();
+		Vector2 pos = screenPos().minus(tileWidth / 2, tileHeight / 2);
 		if (t != null)
-			batch.draw(lastTexture = t, x() - tileWidth / 2, y() - tileHeight / 2, tileWidth, tileHeight);
+			batch.draw(lastTexture = t, pos.x(), pos.y(), tileWidth, tileHeight);
 		else
-			batch.draw(lastTexture, x() - tileWidth / 2, y() - tileHeight / 2, tileWidth, tileHeight);
+			batch.draw(lastTexture, pos.x(), pos.y(), tileWidth, tileHeight);
 	}
 	
 	public static final int pacman = 0, red = 56, blue = 84, yellow = 98;

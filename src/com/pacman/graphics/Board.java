@@ -7,19 +7,14 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.pacman.Game;
-import com.pacman.entities.BigDot;
-import com.pacman.entities.Blinky;
-import com.pacman.entities.Clyde;
-import com.pacman.entities.Dot;
-import com.pacman.entities.Entity;
-import com.pacman.entities.Ghost;
-import com.pacman.entities.Inky;
-import com.pacman.entities.PacMan;
-import com.pacman.entities.Pinky;
+import com.pacman.entities.*;
 
 import algorithms.Dijkstra;
 import algorithms.Dijkstra.Addable;
+import structures.LList;
 import structures.Reversible;
+import tensor.IVector2;
+import tensor.Vector2;
 
 public class Board implements Drawable {
 	
@@ -27,8 +22,8 @@ public class Board implements Drawable {
 	
 	private static final int DEFAULT_HEIGHT = 31, DEFAULT_WIDTH = 28;
 	
-	// w = wall, e = empty, o = dot, O = big dot, c = candy, b = ghost box, d = door (to ghost box), n = nothing, p = pacman
-	private static final short w = 0, e = 1, o = 2, c = 3, b = 4, O = 5, d = 6, n = 7, p = 8;
+	// w = wall, e = empty, o = dot, O = big dot, c = candy, b = ghost box, d = door (to ghost box), n = nothing, p = pacman, t = teleport
+	private static final short w = 0, e = 1, o = 2, c = 3, b = 4, O = 5, d = 6, n = 7, p = 8, t1 = 9;
 	
 	private static final short[] DEFAULT_BOARD = new short[] {
 			w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w, w,
@@ -45,7 +40,7 @@ public class Board implements Drawable {
 			n, n, n, n, n, w, o, w, w, e, e, e, e, e, e, e, e, e, e, w, w, o, w, n, n, n, n, n,
 			n, n, n, n, n, w, o, w, w, e, w, w, d, d, d, d, w, w, e, w, w, o, w, n, n, n, n, n,
 			w, w, w, w, w, w, o, w, w, e, w, b, b, b, b, b, b, w, e, w, w, o, w, w, w, w, w, w,
-			e, e, e, e, e, e, o, e, e, e, w, b, b, b, b, b, b, w, e, e, e, o, e, e, e, e, e, e,
+			t1, e, e, e, e, e, o, e, e, e, w, b, b, b, b, b, b, w, e, e, e, o, e, e, e, e, e, t1,
 			w, w, w, w, w, w, o, w, w, e, w, b, b, b, b, b, b, w, e, w, w, o, w, w, w, w, w, w,
 			n, n, n, n, n, w, o, w, w, e, w, w, w, w, w, w, w, w, e, w, w, o, w, n, n, n, n, n,
 			n, n, n, n, n, w, o, w, w, e, e, e, e, c, c, e, e, e, e, w, w, o, w, n, n, n, n, n,
@@ -88,32 +83,50 @@ public class Board implements Drawable {
 		p.setColor(Color.BLACK);
 		p.fill();
 		
-		for (int i = 0; i < board.length; i++) {
-			float x = x(i);
-			float y = y(i);
-			draw.draw(p, x, y, tileWidth, tileHeight, board[i], getSurrounding(i));
-		}
+		for (int i = 0; i < board.length; i++)
+			draw.draw(p, x(i), height - y(i), tileWidth, tileHeight, board[i], getSurrounding(this.boardPos(i)));
 		
 		texture = new TextureRegion(new Texture(p));
 	}
 	
-	public Dijkstra<Integer, WeightDir> genGraph() {
-		LinkedList<Integer> spots = new LinkedList<>();
+	public Dijkstra<IVector2, WeightDir> genGraph() {
+		LinkedList<IVector2> spots = new LinkedList<>();
 		for (int i = 0; i < board.length; i++) {
 			if (isGhostPermeable(board[i]))
-				spots.add(i);
+				spots.add(boardPos(i));
 		}
-		Dijkstra<Integer, WeightDir> g = new Dijkstra<>(spots);
-		for (int i : spots) {
-			if (i % texWidth < texWidth - 1) {
-				if (isGhostPermeable(board[i + 1]))
-					g.addEdge(i, i + 1, new WeightDir(1, Entity.right));
+		Dijkstra<IVector2, WeightDir> g = new Dijkstra<>(spots);
+		LList<IVector2> teleports = new LList<>();
+		for (IVector2 i : spots) {
+			if (i.x() < texWidth - 1) {
+				if (isGhostPermeable(i.plus(1, 0)))
+					g.addEdge(i, i.plus(1, 0), new WeightDir(1, Entity.right));
 			}
-			if (i / texWidth < texHeight - 1) {
-				if (isGhostPermeable(board[i + texWidth]))
-					g.addEdge(i, i + texWidth, new WeightDir(1, Entity.down));
+			if (i.y() < texHeight - 1) {
+				if (isGhostPermeable(i.plus(0, 1)))
+					g.addEdge(i, i.plus(0, 1), new WeightDir(1, Entity.down));
 			}
+			if (get(i) > 8)
+				teleports.add(i);
 		}
+		teleports.actPairs((a, b) -> {
+			if (get(a) == get(b)) {
+				int dir;
+				if (a.x() == b.x()) {
+					if (a.y() > b.y())
+						dir = Entity.down;
+					else
+						dir = Entity.up;
+				} else if (a.y() == b.y()) {
+					if (a.x() > b.y())
+						dir = Entity.right;
+					else
+						dir = Entity.left;
+				} else
+					throw new IllegalArgumentException("Cannot create teleportation from tile " + a + " to tile " + b);
+				g.addEdge(a, b, new WeightDir(1, dir));
+			}
+		});
 		
 		return g;
 	}
@@ -164,6 +177,14 @@ public class Board implements Drawable {
 		}
 	}
 	
+	public int xCoord(int tile) {
+		return tile % texWidth;
+	}
+	
+	public int yCoord(int tile) {
+		return tile / texWidth;
+	}
+	
 	public int width() {
 		return width;
 	}
@@ -180,14 +201,14 @@ public class Board implements Drawable {
 		return texHeight;
 	}
 	
-	public short get(int tile) {
-		return board[tile];
-	}
-	
-	public short get(int x, int y) {
+	private short get(int x, int y) {
 		if (x >= 0 && x < texWidth && y >= 0 && y < texHeight)
 			return board[tile(x, y)];
 		return n;
+	}
+	
+	public short get(IVector2 pos) {
+		return get(pos.x(), pos.y());
 	}
 	
 	public int size() {
@@ -207,140 +228,196 @@ public class Board implements Drawable {
 	}
 	
 	private float y(int i) {
-		return i / texWidth * tileHeight;
+		return height - i / texWidth * tileHeight;
 	}
 	
-	public float screenX(int i) {
-		return x(i) + tileWidth / 2;
+	public Vector2 screenPos(IVector2 p) {
+		return screenPos(p.x(), p.y());
 	}
 	
-	public float screenY(int i) {
-		return height - y(i) - tileHeight / 2;
+	private Vector2 screenPos(int x, int y) {
+		return new Vector2(tileWidth * (x + .5f), height - tileHeight * (y + .5f));
 	}
 	
-	public static int dirX(int dir) {
+	private float screenX(int tile) {
+		return tileWidth * (tile % texWidth + .5f);
+	}
+	
+	private float screenY(int tile) {
+		return height - tileHeight * (tile / texWidth + .5f);
+	}
+	
+	public static IVector2 screenDirVec(int dir) {
 		if (dir == Entity.right)
-			return 1;
+			return new IVector2(1, 0);
 		if (dir == Entity.left)
-			return -1;
-		return 0;
-	}
-	
-	public static int dirY(int dir) {
+			return new IVector2(-1, 0);
 		if (dir == Entity.up)
-			return 1;
+			return new IVector2(0, 1);
 		if (dir == Entity.down)
-			return -1;
-		return 0;
+			return new IVector2(0, -1);
+		return IVector2.ZERO;
 	}
 	
-	public int dTile(int dir) {
-		return dirX(dir) - boardWidth() * dirY(dir);
+	private static IVector2 dirVec(int dir) {
+		if (dir == Entity.right)
+			return new IVector2(1, 0);
+		if (dir == Entity.left)
+			return new IVector2(-1, 0);
+		if (dir == Entity.up)
+			return new IVector2(0, -1);
+		if (dir == Entity.down)
+			return new IVector2(0, 1);
+		return IVector2.ZERO;
 	}
 	
-	public boolean isWall(int tile, int dir) {
-		int dx = dirX(dir);
-		int dy = dirY(dir);
-		if (!oob(tile, dx, dy))
-			return !isPermeable(board[tile % texWidth + dx + texWidth * (tile / texWidth - dy)]);
+	public IVector2 newPos(IVector2 pos, int dir) {
+		return pos.plus(dirVec(dir));
+	}
+	
+	public boolean isWall(IVector2 pos, int dir) {
+		IVector2 newPos = newPos(pos, dir);
+		if (isTeleporter(pos)) {
+			return !isPermeable(newPos);
+		}
+		if (!oob(newPos))
+			return !isPermeable(newPos);
 		return true;
 	}
 	
-	public int numTurns(int tile) {
-		short[] s = getSurrounding(tile);
+	public int numTurns(IVector2 pos) {
+		short[] s = getSurrounding(pos);
 		return (isPermeable(s[0]) ? 1 : 0) + (isPermeable(s[1]) ? 1 : 0) + (isPermeable(s[2]) ? 1 : 0) + (isPermeable(s[3]) ? 1 : 0);
 	}
 	
-	public boolean isGWall(int tile, int dir) {
-		int dx = dirX(dir);
-		int dy = dirY(dir);
-		if (!oob(tile, dx, dy))
-			return !isGhostPermeable(board[tile % texWidth + dx + texWidth * (tile / texWidth - dy)]);
+	public boolean isGWall(IVector2 pos, int dir) {
+		IVector2 newPos = newPos(pos, dir);
+		if (isTeleporter(pos)) {
+			return !isGhostPermeable(newPos);
+		}
+		if (!oob(newPos))
+			return !isGhostPermeable(newPos);
 		return true;
 	}
 	
-	public int numGTurns(int tile) {
-		short[] s = getSurrounding(tile);
+	public boolean isTeleporter(IVector2 pos) {
+		return isTeleporter(tile(pos));
+	}
+	
+	private boolean isTeleporter(int tile) {
+		return board[tile] > 8;
+	}
+	
+	public int numGTurns(IVector2 pos) {
+		short[] s = getSurrounding(pos);
 		return (isGhostPermeable(s[0]) ? 1 : 0) + (isGhostPermeable(s[1]) ? 1 : 0) + (isGhostPermeable(s[2]) ? 1 : 0) + (isGhostPermeable(s[3]) ? 1 : 0);
 	}
 	
-	private boolean oob(int i, int dx, int dy) {
-		if (dx != 0) {
-			return dx == -1 && i % texWidth <= 0 || (dx == 1 && i % texWidth >= texWidth - 1);
-		} else if (dy != 0) {
-			return dy == -1 && i / texWidth <= 0 || (dy == 1 && i / texWidth >= texHeight - 1);
-		}
+	private boolean oob(IVector2 pos) {
+		if (pos.x() < 0)
+			return true;
+		if (pos.y() < 0)
+			return true;
+		if (pos.x() >= texWidth)
+			return true;
+		if (pos.y() >= texHeight)
+			return true;
 		return false;
 	}
 	
-	public int tile(int x, int y) {
+	public int tile(IVector2 pos) {
+		return tile(pos.x(), pos.y());
+	}
+	
+	private int tile(int x, int y) {
 		return x + texWidth * y;
 	}
 	
-	public int boardPos(float x, float y) {
-		return tile((int) (x / tileWidth), (int) ((height - y) / tileHeight));
+	private int boardX(float x) {
+		return (int) (x / tileWidth);
 	}
 	
-	public boolean isPermeable(short s) {
-		return s != w && s != d && s != n;
+	private int boardY(float y) {
+		return (int) ((height - y) / tileHeight);
 	}
 	
-	public boolean isGhostPermeable(short s) {
+	public IVector2 boardPos(float x, float y) {
+		return new IVector2(boardX(x), boardY(y));
+	}
+	
+	public IVector2 boardPos(int tile) {
+		return new IVector2(tile % texWidth, tile / texWidth);
+	}
+	
+	public boolean isPermeable(IVector2 pos) {
+		return isPermeable(board[tile(pos)]);
+	}
+	
+	private boolean isPermeable(short s) {
+		return s != w && s != d && s != n && s != b;
+	}
+	
+	public boolean isGhostPermeable(IVector2 pos) {
+		return isGhostPermeable(board[tile(pos)]);
+	}
+	
+	private boolean isGhostPermeable(short s) {
 		return s != w && s != n;
 	}
 	
-	public int pathFind(int tilesAhead, int tile, int dir) {
-		short[] tiles = getSurrounding(tile);
+	public IVector2 pathFind(int tilesAhead, IVector2 pos, int dir) {
+		short[] tiles = getSurrounding(pos);
 		if (!isGhostPermeable(tiles[0]) && !isGhostPermeable(tiles[1]) && !isGhostPermeable(tiles[2]) && !isGhostPermeable(tiles[3]))
-			return tile;
+			return pos;
+		IVector2 n;
 		while (tilesAhead > 0) {
-			if (isGhostPermeable(board[tile + dTile(dir)])) {
-				tile += dTile(dir);
+			n = newPos(pos, dir);
+			if (isGhostPermeable(n)) {
+				pos = n;
 				tilesAhead--;
 			}
 			else
 				dir = Entity.rotateDirRight(dir);
 		}
-		return tile;
+		return pos;
 	}
 	
-	public int nearest(float x, float y) {
-		int tile = boardPos(x, y);
+	public IVector2 nearest(float x, float y) {
+		IVector2 v = boardPos(x, y);
+		int tx = v.x();
+		int ty = v.y();
 		
-		if (isGhostPermeable(board[tile]))
-			return tile;
+		if (isPermeable(v))
+			return v;
 		
 		int dx, dy;
-		int tx = tile % texWidth;
-		int ty = tile / texWidth;
 		for (int radius = 1; true; radius++) {
 			for (int d = 0; d < radius; d++) {
 				dx = tx + d;
 				dy = ty + d - radius;
-				if (isGhostPermeable(get(dx, dy)))
-					return tile(dx, dy);
+				if (isPermeable(get(dx, dy)))
+					return new IVector2(dx, dy);
 				dx = tx + d - radius;
 				dy = ty - d;
-				if (isGhostPermeable(get(dx, dy)))
-					return tile(dx, dy);
+				if (isPermeable(get(dx, dy)))
+					return new IVector2(dx, dy);
 				dx = tx - d;
 				dy = ty - d + radius;
-				if (isGhostPermeable(get(dx, dy)))
-					return tile(dx, dy);
+				if (isPermeable(get(dx, dy)))
+					return new IVector2(dx, dy);
 				dx = tx - d + radius;
 				dy = ty + d;
-				if (isGhostPermeable(get(dx, dy)))
-					return tile(dx, dy);
+				if (isPermeable(get(dx, dy)))
+					return new IVector2(dx, dy);
 			}
 		}
 	}
 	
-	public int randomDir(int tile) {
+	public int randomDir(IVector2 pos) {
 		int dir;
-		short[] surr = getSurrounding(tile);
 		do {
 			dir = (int) (Math.random() * 4);
-		} while (!isGhostPermeable(surr[Entity.sequentialDir(dir)]));
+		} while (!isGhostPermeable(newPos(pos, dir)));
 		return dir;
 	}
 	
@@ -356,9 +433,9 @@ public class Board implements Drawable {
 	 * @param height
 	 * @return surrounding tiles
 	 */
-	private short[] getSurrounding(int index) {
-		int x = index % texWidth;
-		int y = index / texWidth;
+	private short[] getSurrounding(IVector2 pos) {
+		int x = pos.x();
+		int y = pos.y();
 		
 		short[] ret = new short[8];
 		if (y > 0) {
