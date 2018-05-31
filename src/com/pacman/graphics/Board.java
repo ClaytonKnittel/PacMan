@@ -11,6 +11,7 @@ import com.pacman.entities.*;
 
 import algorithms.Dijkstra;
 import algorithms.Dijkstra.Addable;
+import methods.P;
 import structures.LList;
 import structures.Reversible;
 import tensor.IVector2;
@@ -350,18 +351,6 @@ public class Board implements Drawable {
 		return (isGhostPermeable(s[0]) ? 1 : 0) + (isGhostPermeable(s[1]) ? 1 : 0) + (isGhostPermeable(s[2]) ? 1 : 0) + (isGhostPermeable(s[3]) ? 1 : 0);
 	}
 	
-	private boolean oob(IVector2 pos) {
-		if (pos.x() < 0)
-			return true;
-		if (pos.y() < 0)
-			return true;
-		if (pos.x() >= texWidth)
-			return true;
-		if (pos.y() >= texHeight)
-			return true;
-		return false;
-	}
-	
 	public int tile(IVector2 pos) {
 		return tile(pos.x(), pos.y());
 	}
@@ -387,9 +376,7 @@ public class Board implements Drawable {
 	}
 	
 	public boolean isPermeable(IVector2 pos) {
-		if (oob(pos))
-			return false;
-		return isPermeable(board[tile(pos)]);
+		return isPermeable(get(pos));
 	}
 	
 	private boolean isPermeable(short s) {
@@ -397,9 +384,7 @@ public class Board implements Drawable {
 	}
 	
 	public boolean isGhostPermeable(IVector2 pos) {
-		if (oob(pos))
-			return false;
-		return isGhostPermeable(board[tile(pos)]);
+		return isGhostPermeable(get(pos));
 	}
 	
 	private boolean isGhostPermeable(short s) {
@@ -470,7 +455,7 @@ public class Board implements Drawable {
 		int dir;
 		do {
 			dir = (int) (Math.random() * 4);
-		} while (!isGhostPermeable(newPos(pos, dir)));
+		} while (!isPermeable(newPos(pos, dir)));
 		return dir;
 	}
 	
@@ -553,7 +538,7 @@ public class Board implements Drawable {
 		return texture;
 	}
 	
-	public Iterable<Entity> genEntities() {
+	public Iterable<Entity> genEntities(boolean includePacGhost) {
 		LinkedList<Entity> entities = new LinkedList<Entity>();
 		boolean[] used = new boolean[board.length];
 		int which = 0;
@@ -574,11 +559,15 @@ public class Board implements Drawable {
 					entities.add(new Fruit(xp + tileWidth / 2, yp));
 				break;
 			case p:
+				if (!includePacGhost)
+					continue;
 				if (board[i - 1] == p || board[i - texWidth] == p)
 					continue;
 				entities.add(new PacMan(xp, yp));
 				break;
 			case b:
+				if (!includePacGhost)
+					continue;
 				if (board[i + 1] == b && board[i + texWidth] == b && board[i + texWidth + 1] == b) {
 					if (!used[i] && !used[i + 1] && !used[i + texWidth] && !used[i + texWidth + 1]) {
 						Ghost g = null;

@@ -20,6 +20,8 @@ public class PacMan extends Live {
 	
 	private int mode;
 	
+	private int lives;
+	
 	public static final int eat = 0, die = 1, stop = 2;
 	
 	public PacMan(float x, float y) {
@@ -29,6 +31,7 @@ public class PacMan extends Live {
 		phase = 1;
 		super.setDelay(Entity.animationDelta);
 		eatMode();
+		lives = 3;
 	}
 	
 	public void stop() {
@@ -45,6 +48,15 @@ public class PacMan extends Live {
 		phase = 0;
 		game().kill();
 		super.setAnimation(die());
+		lives--;
+	}
+	
+	public int lives() {
+		return lives;
+	}
+	
+	public void addLife() {
+		lives++;
 	}
 	
 	@Override

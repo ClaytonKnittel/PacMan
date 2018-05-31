@@ -10,6 +10,7 @@ import com.pacman.utils.EventList;
 
 import structures.CategorySet;
 import structures.LList;
+import tensor.IVector2;
 
 public class Game {
 	
@@ -17,6 +18,7 @@ public class Game {
 	private LList<Entity> entities;
 	private CategorySet<Entity> tiles;
 	private Score score;
+	private int cap;
 	
 //	private Target target;
 	public static Entity tar;
@@ -48,6 +50,7 @@ public class Game {
 //		target = new Target(100, 100);
 		
 		score = new Score(0, height - 30, width, 30);
+		cap = 10000;
 		
 		eventList = new EventList();
 		
@@ -75,7 +78,7 @@ public class Game {
 	
 	private void genEntities() {
 		numDots = 0;
-		for (Entity e : board.genEntities()) {
+		for (Entity e : board.genEntities(level == 1)) {
 			if (e instanceof PacMan)
 				this.pacman = (PacMan) e;
 			else if (e instanceof Pinky)
@@ -118,6 +121,7 @@ public class Game {
 		clyde.stop();
 		pacman.stop();
 		
+		eventList.clear();
 		events.clear();
 		events.add(() -> board.glow(), 1);
 		events.add(() -> board.revert(), .4f);
@@ -164,8 +168,10 @@ public class Game {
 		inky.stop();
 		clyde.stop();
 		
+		eventList.pause();
 		events = new ActionTimer();
-		events.add(() -> tryAgain(), 3.5f);
+		events.add(() -> eventList.resume(), 3.5f);
+		events.add(() -> tryAgain(), 0);
 	}
 	
 	public void eatDot() {
@@ -183,6 +189,10 @@ public class Game {
 	
 	public void add(int points) {
 		score.add(points);
+		if (score.score() > cap) {
+			pacman.addLife();
+			cap += 10000;
+		}
 	}
 	
 	public boolean paused() {
@@ -242,7 +252,7 @@ public class Game {
 		for (Entity e : entities)
 			e.draw(batch, board.tileWidth(), board.tileHeight());
 //		target.draw(batch, board.tileWidth(), board.tileHeight());
-		score.draw(batch, level);
+		score.draw(batch, level, pacman.lives());
 		lastTime = now;
 	}
 	

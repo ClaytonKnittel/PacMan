@@ -365,7 +365,7 @@ public abstract class Entity implements Drawable {
 		return fruitNumSprites[which];
 	}
 	
-	protected TextureRegion getTexture(int i) {
+	public static TextureRegion getTexture(int i) {
 		return sprites[i];
 	}
 	

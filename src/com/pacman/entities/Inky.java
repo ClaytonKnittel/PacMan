@@ -20,7 +20,7 @@ public class Inky extends Ghost {
 	protected IVector2 chaseTarget() {
 		IVector2 blinkyTar = blinky.target();
 		if (blinkyTar == null)
-			return null;
+			return cornerTarget();
 		Vector2 v = blinky.screenPos();
 		Vector2 d = board().screenPos(blinkyTar);
 		v = d.minus(v);
@@ -55,6 +55,6 @@ public class Inky extends Ghost {
 	}
 	
 	protected IVector2 cornerTarget() {
-		return IVector2.ZERO;
+		return new IVector2(26, 29);
 	}
 }

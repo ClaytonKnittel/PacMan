@@ -26,23 +26,22 @@ public class Fruit extends Entity implements Collectable {
 	}
 	
 	public int random() {
-		return galaxianBoss;
-//		double val = Math.random();
-//		if (val < 0.532049657968)
-//			return cherry;
-//		if (val < 0.709399543957)
-//			return strawberry;
-//		if (val < 0.815809475551)
-//			return orange;
-//		if (val < 0.891816569546)
-//			return apple;
-//		if (val < 0.945021535343)
-//			return melon;
-//		if (val < 0.971624018242)
-//			return galaxianBoss;
-//		if (val < 0.989359006841)
-//			return bell;
-//		return key;
+		double val = Math.random();
+		if (val < 0.532049657968)
+			return cherry;
+		if (val < 0.709399543957)
+			return strawberry;
+		if (val < 0.815809475551)
+			return orange;
+		if (val < 0.891816569546)
+			return apple;
+		if (val < 0.945021535343)
+			return melon;
+		if (val < 0.971624018242)
+			return galaxianBoss;
+		if (val < 0.989359006841)
+			return bell;
+		return key;
 	}
 	
 	public int value() {

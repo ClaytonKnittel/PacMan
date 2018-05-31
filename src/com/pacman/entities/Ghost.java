@@ -196,6 +196,8 @@ public abstract class Ghost extends Live {
 		case stop:
 			return chaseTarget();
 		case scared:
+			if (!board().isPermeable(pos()))
+				return chaseTarget();
 		case point:
 			return null;
 		case eyes:
