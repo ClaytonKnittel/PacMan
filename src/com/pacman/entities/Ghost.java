@@ -16,8 +16,6 @@ public abstract class Ghost extends Live {
 	
 	public static final int chase = 0, scared = 1, eyes = 2, box = 3, stop = 4, point = 5;
 	
-	private static final float speed = 65f;
-	
 	private static int points;
 
 	public Ghost(float x, float y, float width, float height, int name) {
@@ -34,14 +32,26 @@ public abstract class Ghost extends Live {
 	@Override
 	public float speed() {
 		if (mode == box)
-			return speed / 2;
+			return speed_() / 2;
 		if (mode == stop)
 			return 0;
 		if (mode == scared)
-			return speed / 2;
+			return speed_() / 2;
 		if (mode == eyes)
-			return speed * 2;
-		return speed;
+			return speed_() * 2;
+		return speed_();
+	}
+	
+	private float speed_() {
+		if (game().level() == 1)
+			return .75f * PacMan.speed;
+		if (game().level() < 5)
+			return .85f * PacMan.speed;
+		return .95f * PacMan.speed;
+	}
+	
+	public void stop() {
+		mode = stop;
 	}
 	
 	public int mode() {
@@ -49,7 +59,7 @@ public abstract class Ghost extends Live {
 	}
 	
 	public void setMode(int mode) {
-		if (dead)
+		if (dead || this.mode == stop)
 			return;
 		this.mode = mode;
 	}
@@ -111,7 +121,7 @@ public abstract class Ghost extends Live {
 		a.add(() -> phase -= 2, .25f);
 		a.add(() -> phase += 2, .25f);
 		a.add(() -> phase -= 2, .25f);
-		game().eventList().add(a);
+		game().addEvent(a);
 	}
 	
 	public void reset() {

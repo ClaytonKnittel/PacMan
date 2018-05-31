@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.pacman.graphics.Board;
 import com.pacman.graphics.Drawable;
 
 public class Score implements Drawable {
@@ -47,10 +48,12 @@ public class Score implements Drawable {
 		b.getData().setScale(.4f);
 	}
 	
-	public void draw(Batch batch) {
+	public void draw(Batch batch, int level) {
 		batch.draw(texture(), x, y);
 		b.draw(batch, "Score", x + width / 4, y + height * 7 / 8);
 		b.draw(batch, score + "", x + width / 3, y + height * 3 / 8);
+		b.draw(batch, "Level", x + width * 3 / 4, y + height * 7 / 8);
+		b.draw(batch, level + "", x + width * 7 / 9, y + height * 3 / 8);
 	}
 	
 	@Override

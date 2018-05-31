@@ -10,10 +10,6 @@ public class Target extends Entity {
 		super(x, y, 13, 13);
 	}
 	
-	public void set(int x, int y) {
-		super.setPos(x, y);
-	}
-	
 	@Override
 	public TextureRegion texture() {
 		return super.getTexture(44);

@@ -12,7 +12,7 @@ public class Pinky extends Ghost {
 	}
 	
 	protected IVector2 chaseTarget() {
-		return board().pathFind(2, pacman().nextTile(), pacman().dir());
+		return board().pathFind(4, pacman().nextTile(), pacman().dir());
 	}
 	
 	protected IVector2 boxTarget() {

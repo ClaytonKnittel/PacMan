@@ -35,6 +35,7 @@ private static final TextureRegion texture;
 		delete();
 		game().scare();
 		game().add(value);
+		game().eatDot();
 	}
 
 	public TextureRegion texture() {

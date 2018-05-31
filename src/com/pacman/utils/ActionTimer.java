@@ -2,7 +2,7 @@ package com.pacman.utils;
 
 import java.util.LinkedList;
 
-public class ActionTimer extends Timer {
+public class ActionTimer extends Timer implements Event {
 	
 	private LinkedList<ActionDelay> actions;
 	private boolean loop;
@@ -14,6 +14,11 @@ public class ActionTimer extends Timer {
 	
 	public void loop() {
 		loop = true;
+	}
+	
+	public void clear() {
+		actions.clear();
+		super.set();
 	}
 	
 	public void add(Action a, float secondsAfter) {

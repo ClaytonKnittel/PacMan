@@ -18,7 +18,7 @@ import tensor.Vector2;
 
 public class Board implements Drawable {
 	
-	private TextureRegion texture;
+	private TextureRegion texture, glowingTexture;
 	
 	private static final int DEFAULT_HEIGHT = 31, DEFAULT_WIDTH = 28;
 	
@@ -64,20 +64,29 @@ public class Board implements Drawable {
 	
 	private short[] board;
 	
+	private boolean glowing;
+	
 	public Board(int width, int height) {
+		this(width, height, DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_BOARD, DEFAULT_DRAW_STRATEGY, GLOWING_DRAW_STRATEGY);
+	}
+	
+	public Board(int width, int height, int tileWidth, int tileHeight, short[] board, DrawStrategy boardDrawer, DrawStrategy glowingDrawer) {
 		this.width = width;
 		this.height = height;
-		this.texWidth = DEFAULT_WIDTH;
-		this.texHeight = DEFAULT_HEIGHT;
+		this.texWidth = tileWidth;
+		this.texHeight = tileHeight;
 		
 		this.tileWidth = (float) width / texWidth;
 		this.tileHeight = (float) height / texHeight;
 		
-		this.board = DEFAULT_BOARD;
-		genBoard(DEFAULT_DRAW_STRATEGY);
+		glowing = false;
+		
+		this.board = board;
+		texture = genBoard(boardDrawer);
+		glowingTexture = genBoard(glowingDrawer);
 	}
 	
-	private void genBoard(DrawStrategy draw) {
+	private TextureRegion genBoard(DrawStrategy draw) {
 		Pixmap p = new Pixmap(width, height, Pixmap.Format.RGBA8888);
 		
 		p.setColor(Color.BLACK);
@@ -86,7 +95,7 @@ public class Board implements Drawable {
 		for (int i = 0; i < board.length; i++)
 			draw.draw(p, x(i), height - y(i), tileWidth, tileHeight, board[i], getSurrounding(this.boardPos(i)));
 		
-		texture = new TextureRegion(new Texture(p));
+		return new TextureRegion(new Texture(p));
 	}
 	
 	public Dijkstra<IVector2, WeightDir> genGraph() {
@@ -285,6 +294,10 @@ public class Board implements Drawable {
 		return pos.plus(dirVec(dir));
 	}
 	
+	public boolean canMove(IVector2 pos, int dir) {
+		return isPermeable(newPos(pos, dir));
+	}
+	
 	public boolean offScreen(IVector2 pos, int dir) {
 		switch(dir) {
 		case Entity.left:
@@ -312,10 +325,7 @@ public class Board implements Drawable {
 	}
 	
 	public boolean isWall(IVector2 pos, int dir) {
-		IVector2 newPos = newPos(pos, dir);
-		if (!oob(newPos))
-			return !isPermeable(newPos);
-		return true;
+		return !isPermeable(newPos(pos, dir));
 	}
 	
 	public int numTurns(IVector2 pos) {
@@ -324,10 +334,7 @@ public class Board implements Drawable {
 	}
 	
 	public boolean isGWall(IVector2 pos, int dir) {
-		IVector2 newPos = newPos(pos, dir);
-		if (!oob(newPos))
-			return !isGhostPermeable(newPos);
-		return true;
+		return !isGhostPermeable(newPos(pos, dir));
 	}
 	
 	public boolean isTeleporter(IVector2 pos) {
@@ -380,6 +387,8 @@ public class Board implements Drawable {
 	}
 	
 	public boolean isPermeable(IVector2 pos) {
+		if (oob(pos))
+			return false;
 		return isPermeable(board[tile(pos)]);
 	}
 	
@@ -388,6 +397,8 @@ public class Board implements Drawable {
 	}
 	
 	public boolean isGhostPermeable(IVector2 pos) {
+		if (oob(pos))
+			return false;
 		return isGhostPermeable(board[tile(pos)]);
 	}
 	
@@ -407,9 +418,21 @@ public class Board implements Drawable {
 				tilesAhead--;
 			}
 			else
-				dir = Entity.rotateDirRight(dir);
+				dir = turn(pos, dir);
 		}
 		return pos;
+	}
+	
+	protected int turn(IVector2 pos, int dir) {
+		if (canMove(pos, Entity.up) && dir != Entity.down)
+			return Entity.up;
+		if (canMove(pos, Entity.down) && dir != Entity.up)
+			return Entity.down;
+		if (canMove(pos, Entity.left) && dir != Entity.right)
+			return Entity.left;
+		if (canMove(pos, Entity.right) && dir != Entity.left)
+			return Entity.right;
+		return -1;
 	}
 	
 	public IVector2 nearest(float x, float y) {
@@ -515,8 +538,18 @@ public class Board implements Drawable {
 		return ret;
 	}
 	
+	public void glow() {
+		glowing = true;
+	}
+	
+	public void revert() {
+		glowing = false;
+	}
+	
 	@Override
 	public TextureRegion texture() {
+		if (glowing)
+			return glowingTexture;
 		return texture;
 	}
 	
@@ -525,35 +558,25 @@ public class Board implements Drawable {
 		boolean[] used = new boolean[board.length];
 		int which = 0;
 		Ghost gh = null;
-		
+		float xp, yp;
 		for (int i = 0; i < board.length; i++) {
+			xp = screenX(i);
+			yp = screenY(i);
 			switch (board[i]) {
 			case o:
-				entities.add(new Dot(screenX(i), screenY(i)));
+				entities.add(new Dot(xp, yp));
 				break;
 			case O:
-				entities.add(new BigDot(screenX(i), screenY(i)));
+				entities.add(new BigDot(xp, yp));
 				break;
 			case c:
+				if (board[i + 1] == c)
+					entities.add(new Fruit(xp + tileWidth / 2, yp));
 				break;
 			case p:
 				if (board[i - 1] == p || board[i - texWidth] == p)
 					continue;
-				float x, y;
-				if (board[i + 1] == p) {
-					x = (screenX(i) + screenX(i + 1)) / 2;
-					if (board[i + texWidth] == p)
-						y = (screenY(i) + screenY(i + texWidth)) / 2;
-					else
-						y = screenY(i);
-				} else if (board[i + texWidth] == p) {
-					x = screenX(i);
-					y = (screenY(i) + screenY(i + texWidth)) / 2;
-				} else {
-					x = screenX(i);
-					y = screenY(i);
-				}
-				entities.add(new PacMan(x, y));
+				entities.add(new PacMan(xp, yp));
 				break;
 			case b:
 				if (board[i + 1] == b && board[i + texWidth] == b && board[i + texWidth + 1] == b) {
@@ -561,18 +584,18 @@ public class Board implements Drawable {
 						Ghost g = null;
 						switch (which) {
 						case 0:
-							g = new Pinky(screenX(i), screenY(i));
-							break;
-						case 1:
-							g = new Blinky(screenX(i), screenY(i) - tileHeight);
-							break;
-						case 2:
-							g = new Inky(screenX(i), screenY(i) - 2 * tileHeight);
-							((Inky) g).setBlinky(gh);
+							g = new Pinky(xp, yp);
 							Game.tar = g;
 							break;
+						case 1:
+							g = new Blinky(xp, yp - tileHeight);
+							break;
+						case 2:
+							g = new Inky(xp, yp - 2 * tileHeight);
+							((Inky) g).setBlinky(gh);
+							break;
 						case 3:
-							g = new Clyde(screenX(i), screenY(i) - tileHeight);
+							g = new Clyde(xp, yp - tileHeight);
 						}
 						g.setD((float) Math.random() * tileHeight);
 						entities.add(g);
@@ -610,6 +633,19 @@ public class Board implements Drawable {
 		}
 	};
 	
+	private static DrawStrategy GLOWING_DRAW_STRATEGY = new DrawStrategy() {
+		@Override
+		public void draw(Pixmap p, float xOff, float yOff, float width, float height, short currentSquare, short[] surrounding) {
+			switch (currentSquare) {
+			case w:
+				drawWall(p, glowingColor, xOff, yOff, width, height, surrounding);
+				break;
+			case d:
+				drawDoor(p, glowingDoorColor, xOff, yOff, width, height, surrounding);
+			}
+		}
+	};
+	
 	private static void fillSquare(Pixmap p, Color color, float xOff, float yOff, float width, float height) {
 		p.setColor(color);
 		p.fillRectangle((int) xOff, (int) yOff, (int) width, (int) height);
@@ -617,6 +653,8 @@ public class Board implements Drawable {
 	
 	private static final Color wallColor = new Color(0x1030cdff);
 	private static final Color doorColor = new Color(0xf1b9d9ff);
+	private static final Color glowingColor = new Color(0xadadafff);
+	private static final Color glowingDoorColor = new Color(0xcdcdceff);
 	
 	private static final int thickness = 2;
 	
@@ -708,7 +746,7 @@ public class Board implements Drawable {
 			hh += 1;
 		
 		
-		p.setColor(doorColor);
+		p.setColor(color);
 		if (mergeable(surrounding[0])) {
 			p.fillRectangle((int) x, (int) yOff, (int) w, (int) hh);
 		}

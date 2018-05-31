@@ -14,13 +14,13 @@ public class PacMan extends Live {
 	
 	private IVector2 startingPos;
 	
-	private static final float speed = 60f;
-	private static final float eatDistance = 35;
+	public static final float speed = 60f;
+	private static final float eatDistance = 80;
 	private static final float killDistance = 100;
 	
 	private int mode;
 	
-	public static int eat = 0, die = 1;
+	public static final int eat = 0, die = 1, stop = 2;
 	
 	public PacMan(float x, float y) {
 		super(x, y, 13, 13);
@@ -29,6 +29,10 @@ public class PacMan extends Live {
 		phase = 1;
 		super.setDelay(Entity.animationDelta);
 		eatMode();
+	}
+	
+	public void stop() {
+		mode = stop;
 	}
 	
 	private void eatMode() {
@@ -45,7 +49,7 @@ public class PacMan extends Live {
 	
 	@Override
 	public float speed() {
-		if (mode == die)
+		if (mode == die || mode == stop)
 			return 0;
 		return speed;
 	}
@@ -106,10 +110,15 @@ public class PacMan extends Live {
 	
 	@Override
 	public TextureRegion texture() {
-		if (mode == eat)
+		switch (mode) {
+		case eat:
 			return super.pacmanTexture(dir(), phase);
-		else
+		case die:
 			return super.dyingTexture(phase);
+		case stop:
+			return super.pacmanTexture(dir(), 2);
+		}
+		throw new IllegalStateException("Pacman cannot be in mode " + mode);
 	}
 	
 	public static Controller controller() {

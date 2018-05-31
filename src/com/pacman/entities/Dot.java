@@ -29,6 +29,7 @@ public class Dot extends Entity implements Collectable {
 	public void collect() {
 		delete();
 		game().add(value);
+		game().eatDot();
 	}
 	
 	@Override

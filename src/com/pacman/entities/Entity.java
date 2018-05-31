@@ -26,6 +26,7 @@ public abstract class Entity implements Drawable {
 	
 	private static final Texture spritesheet;
 	private static final TextureRegion[] sprites;
+	private static final TextureRegion[] fruitNumSprites;
 	
 	private TextureRegion lastTexture;
 	
@@ -44,10 +45,19 @@ public abstract class Entity implements Drawable {
 	private boolean visible;
 	
 	static {
-		spritesheet = new Texture(Gdx.files.internal("/Users/claytonknittel/Documents/workspace/Projects/libgdx/core/assets/pacman_sprite_clear.png"), Format.RGBA8888, false);
-		sprites = new TextureRegion[140];
+		spritesheet = new Texture(Gdx.files.internal("/Users/claytonknittel/Documents/workspace/Projects/libgdx/core/assets/pacman_sprite.png"), Format.RGBA8888, false);
+		sprites = new TextureRegion[136];
 		for (int i = 0; i < sprites.length; i++)
 			sprites[i] = new TextureRegion(spritesheet, 3 + (i % 14) * 16, i / 14 * 16, 16, 16);
+		fruitNumSprites = new TextureRegion[8];
+		fruitNumSprites[0] = new TextureRegion(spritesheet, 5, 148, 13, 7);
+		fruitNumSprites[1] = new TextureRegion(spritesheet, 19, 148, 15, 7);
+		fruitNumSprites[2] = new TextureRegion(spritesheet, 35, 148, 15, 7);
+		fruitNumSprites[3] = new TextureRegion(spritesheet, 51, 148, 15, 7);
+		fruitNumSprites[4] = new TextureRegion(spritesheet, 67, 148, 18, 7);
+		fruitNumSprites[5] = new TextureRegion(spritesheet, 86, 148, 20, 7);
+		fruitNumSprites[6] = new TextureRegion(spritesheet, 107, 148, 20, 7);
+		fruitNumSprites[7] = new TextureRegion(spritesheet, 128, 148, 20, 7);
 	}
 	
 	public static void setGame(Game game) {
@@ -61,10 +71,10 @@ public abstract class Entity implements Drawable {
 		this.pos = board.boardPos(x, y);
 		Vector2 b = board().screenPos(pos);
 		if (Math.abs(x - b.x()) > Math.abs(y - b.y())) {
-			dir = x - b.x() > 0 ? 1 : 3;
+			dir = x - b.x() > 0 ? right : left;
 			d = Math.abs(x - b.x());
 		} else {
-			dir = y - b.y() > 0 ? 0 : 2;
+			dir = y - b.y() > 0 ? up : down;
 			d = Math.abs(y - b.y());
 		}
 		this.time = 0;
@@ -153,11 +163,11 @@ public abstract class Entity implements Drawable {
 		return board.numTurns(pos) > 2;
 	}
 	
-	protected void setPos(IVector2 pos) {
+	public void setPos(IVector2 pos) {
 		setPos(pos.x(), pos.y());
 	}
 	
-	protected void setPos(int x, int y) {
+	public void setPos(int x, int y) {
 		pos = new IVector2(x, y);
 	}
 	
@@ -250,17 +260,20 @@ public abstract class Entity implements Drawable {
 		if (!visible)
 			return;
 		TextureRegion t = texture();
-		Vector2 pos = screenPos().minus(tileWidth / 2, tileHeight / 2);
-		if (t != null)
-			batch.draw(lastTexture = t, pos.x(), pos.y(), tileWidth, tileHeight);
+		if (t == null)
+			t = lastTexture;
 		else
-			batch.draw(lastTexture, pos.x(), pos.y(), tileWidth, tileHeight);
+			lastTexture = t;
+		
+		Vector2 pos = screenPos().minus(t.getRegionWidth() / 2, t.getRegionHeight() / 2);
+		batch.draw(t, pos.x(), pos.y());
+		
 		if (board().offScreen(this.pos, dir)) {
 			if (vertDir(dir))
 				pos = board().reflectY(pos);
 			else
 				pos = board().reflectX(pos);
-			batch.draw(lastTexture, pos.x(), pos.y(), tileWidth, tileHeight);
+			batch.draw(lastTexture, pos.x(), pos.y());
 		}
 	}
 	
@@ -346,6 +359,10 @@ public abstract class Entity implements Drawable {
 	
 	protected TextureRegion fruitTexture(int which) {
 		return getTexture(44 + which);
+	}
+	
+	protected TextureRegion fruitPointTexture(int which) {
+		return fruitNumSprites[which];
 	}
 	
 	protected TextureRegion getTexture(int i) {
