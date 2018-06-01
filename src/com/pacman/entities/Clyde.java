@@ -12,7 +12,10 @@ public class Clyde extends Ghost {
 	}
 	
 	protected IVector2 chaseTarget() {
-		return pacman().nextTile();
+		IVector2 p = pacman().nextTile();
+		if (p.minus(pos()).mag2() < 64)
+			return cornerTarget();
+		return p;
 	}
 	
 	protected IVector2 boxTarget() {
@@ -20,6 +23,6 @@ public class Clyde extends Ghost {
 	}
 	
 	protected IVector2 cornerTarget() {
-		return IVector2.ZERO;
+		return new IVector2(3, 29);
 	}
 }

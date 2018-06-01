@@ -10,7 +10,6 @@ import com.pacman.utils.EventList;
 
 import structures.CategorySet;
 import structures.LList;
-import tensor.IVector2;
 
 public class Game {
 	
@@ -20,7 +19,6 @@ public class Game {
 	private Score score;
 	private int cap;
 	
-//	private Target target;
 	public static Entity tar;
 	
 	private PacMan pacman;
@@ -93,9 +91,26 @@ public class Game {
 				numDots++;
 			if (e instanceof Fruit)
 				eventList.add(((Fruit) e).fruitEvent());
-			entities.add(e);
-			tiles.add(e);
+			add(e);
 		}
+		if (level != 1) {
+			add(pacman);
+			add(pinky);
+			add(blinky);
+			add(inky);
+			add(clyde);
+			
+			pacman.reset();
+			pinky.reset();
+			blinky.reset();
+			inky.reset();
+			clyde.reset();
+		}
+	}
+	
+	private void add(Entity e) {
+		entities.add(e);
+		tiles.add(e);
 	}
 	
 	public void start() {

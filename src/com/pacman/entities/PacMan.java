@@ -70,6 +70,7 @@ public class PacMan extends Live {
 		setPos(startingPos);
 		setD(0);
 		setDir(up);
+		controller().setDir(up);
 		eatMode();
 		setVisible(true);
 	}
@@ -147,10 +148,10 @@ public class PacMan extends Live {
 			}
 			
 			public int update() {
-				boolean a = Gdx.input.isKeyPressed(Input.Keys.A);
-				boolean d = Gdx.input.isKeyPressed(Input.Keys.D);
-				boolean s = Gdx.input.isKeyPressed(Input.Keys.S);
-				boolean w = Gdx.input.isKeyPressed(Input.Keys.W);
+				boolean a = Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT);
+				boolean d = Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT);
+				boolean s = Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN);
+				boolean w = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP);
 				
 				boolean ca = a == true && this.a == false;
 				boolean cd = d == true && this.d == false;

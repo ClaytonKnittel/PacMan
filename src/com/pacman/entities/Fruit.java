@@ -71,8 +71,8 @@ public class Fruit extends Entity implements Collectable {
 	public ActionTimer fruitEvent() {
 		ActionTimer a = new ActionTimer();
 		a.loop();
-		a.add(() -> pickRandom(), 10);
-		a.add(() -> deleteFruit(), 10);
+		a.add(() -> pickRandom(), 20);
+		a.add(() -> deleteFruit(), 25);
 		return a;
 	}
 	
