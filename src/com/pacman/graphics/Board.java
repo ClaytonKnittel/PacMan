@@ -5,13 +5,12 @@ import java.util.LinkedList;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.pacman.Game;
 import com.pacman.entities.*;
 
 import algorithms.Dijkstra;
 import algorithms.Dijkstra.Addable;
-import methods.P;
 import structures.LList;
 import structures.Reversible;
 import tensor.IVector2;
@@ -531,7 +530,10 @@ public class Board implements Drawable {
 		glowing = false;
 	}
 	
-	@Override
+	public void draw(Batch b) {
+		b.draw(texture(), 0, 0);
+	}
+	
 	public TextureRegion texture() {
 		if (glowing)
 			return glowingTexture;
@@ -574,7 +576,6 @@ public class Board implements Drawable {
 						switch (which) {
 						case 0:
 							g = new Pinky(xp, yp);
-							Game.tar = g;
 							break;
 						case 1:
 							g = new Blinky(xp, yp - tileHeight);

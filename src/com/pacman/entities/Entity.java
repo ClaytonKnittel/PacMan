@@ -68,6 +68,8 @@ public abstract class Entity implements Drawable {
 	}
 	
 	public Entity(float x, float y, float width, float height) {
+		this.width = width;
+		this.height = height;
 		this.pos = board.boardPos(x, y);
 		Vector2 b = board().screenPos(pos);
 		if (Math.abs(x - b.x()) > Math.abs(y - b.y())) {
@@ -256,7 +258,9 @@ public abstract class Entity implements Drawable {
 		tiles.update(this);
 	}
 	
-	public void draw(Batch batch, float tileWidth, float tileHeight) {
+	public abstract TextureRegion texture();
+	
+	public void draw(Batch batch) {
 		if (!visible)
 			return;
 		TextureRegion t = texture();
@@ -277,7 +281,7 @@ public abstract class Entity implements Drawable {
 		}
 	}
 	
-	public static final int pacman = 0, red = 56, blue = 84, yellow = 98;
+	public static final int pacman = 0, blue = 64;
 	public static final int pinky = 70, blinky = 56, inky = 84, clyde = 98;
 	
 	public static final int right = 0, left = 1, up = 2, down = 3;
@@ -346,7 +350,7 @@ public abstract class Entity implements Drawable {
 	}
 	
 	protected TextureRegion scaredTexture(int phase) {
-		return getTexture(64 + phase);
+		return getTexture(blue + phase);
 	}
 	
 	protected TextureRegion eyeTexture(int direction) {

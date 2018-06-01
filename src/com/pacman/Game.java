@@ -1,5 +1,7 @@
 package com.pacman;
 
+import com.badlogic.gdx.InputProcessor;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.pacman.entities.*;
 import com.pacman.graphics.Board;
@@ -7,19 +9,18 @@ import com.pacman.utils.ActionTimer;
 import com.pacman.utils.ConditionalEvent;
 import com.pacman.utils.Event;
 import com.pacman.utils.EventList;
+import com.pacman.utils.Screen;
 
 import structures.CategorySet;
 import structures.LList;
 
-public class Game {
+public class Game extends Screen {
 	
 	private Board board;
 	private LList<Entity> entities;
 	private CategorySet<Entity> tiles;
 	private Score score;
 	private int cap;
-	
-	public static Entity tar;
 	
 	private PacMan pacman;
 	private Ghost pinky, blinky, inky, clyde;
@@ -36,8 +37,12 @@ public class Game {
 	public static final int chase = 0, hide = 1, blue = 2, dead = 3;
 	
 	public Game(int width, int height) {
+		super(width, height);
+	}
+	
+	public void init() {
 		entities = new LList<Entity>();
-		board = new Board(width, height - 30);
+		board = new Board(width(), height() - 30);
 		
 		tiles = new CategorySet<>(board.size(), e -> e.getTiles());
 		
@@ -45,17 +50,16 @@ public class Game {
 		
 		Entity.setGame(this);
 		
-//		target = new Target(100, 100);
-		
-		score = new Score(0, height - 30, width, 30);
+		score = new Score(0, height() - 30, width(), 30);
 		cap = 10000;
 		
 		eventList = new EventList();
 		
-		start();
-		
-		lastTime = System.currentTimeMillis();
 		paused = 0;
+	}
+	
+	public InputProcessor input() {
+		return null;
 	}
 	
 	public Board board() {
@@ -114,6 +118,8 @@ public class Game {
 	}
 	
 	public void start() {
+		lastTime = System.currentTimeMillis();
+		
 		level++;
 		entities.clear();
 		tiles.clear();
@@ -244,6 +250,11 @@ public class Game {
 		}
 	}
 	
+	@Override
+	public Color bgColor() {
+		return Color.BLACK;
+	}
+	
 	public void draw(Batch batch) {
 		long now = System.currentTimeMillis();
 		long diff = now - lastTime;
@@ -263,12 +274,20 @@ public class Game {
 //				target.setPos(((Ghost) tar).target());
 		}
 		
-		batch.draw(board.texture(), 0, 0);
+		board.draw(batch);
 		for (Entity e : entities)
-			e.draw(batch, board.tileWidth(), board.tileHeight());
+			e.draw(batch);
 //		target.draw(batch, board.tileWidth(), board.tileHeight());
-		score.draw(batch, level, pacman.lives());
+		score.setLevelAndLives(level, pacman.lives());
+		score.draw(batch);
 		lastTime = now;
+	}
+	
+	public void stop() {
+		entities.clear();
+		tiles.clear();
+		eventList.clear();
+		events = null;
 	}
 	
 	public void dispose() {

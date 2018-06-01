@@ -1,9 +1,9 @@
 package com.pacman.graphics;
 
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.g2d.Batch;
 
 public interface Drawable {
 	
-	TextureRegion texture();
+	void draw(Batch b);
 	
 }

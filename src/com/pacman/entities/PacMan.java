@@ -153,10 +153,10 @@ public class PacMan extends Live {
 				boolean s = Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN);
 				boolean w = Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP);
 				
-				boolean ca = a == true && this.a == false;
-				boolean cd = d == true && this.d == false;
-				boolean cs = s == true && this.s == false;
-				boolean cw = w == true && this.w == false;
+				boolean ca = a && !this.a;
+				boolean cd = d && !this.d;
+				boolean cs = s && !this.s;
+				boolean cw = w && !this.w;
 				
 				if (ca)
 					return dir = left;
