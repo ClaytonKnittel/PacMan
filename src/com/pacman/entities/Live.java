@@ -30,6 +30,10 @@ public abstract class Live extends Entity {
 		return board().newPos(pos(), dir());
 	}
 	
+	public IVector2 prevTile() {
+		return board().newPos(pos(), Entity.opposite(dir()));
+	}
+	
 	public abstract float speed();
 	
 	@Override

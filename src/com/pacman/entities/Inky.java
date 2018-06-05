@@ -7,6 +7,7 @@ public class Inky extends Ghost {
 	
 	private IVector2 startingPos;
 	private Ghost blinky;
+	private static final IVector2 cornerTarget = new IVector2(26, 29);
 	
 	public Inky(float x, float y) {
 		super(x, y, 13, 13, Entity.inky);
@@ -55,6 +56,6 @@ public class Inky extends Ghost {
 	}
 	
 	protected IVector2 cornerTarget() {
-		return new IVector2(26, 29);
+		return cornerTarget;
 	}
 }

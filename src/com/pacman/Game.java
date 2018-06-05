@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.pacman.entities.*;
 import com.pacman.graphics.Board;
+import com.pacman.graphics.TextBox;
 import com.pacman.utils.ActionTimer;
 import com.pacman.utils.ConditionalEvent;
 import com.pacman.utils.Event;
@@ -21,6 +22,8 @@ public class Game extends Screen {
 	private CategorySet<Entity> tiles;
 	private Score score;
 	private int cap;
+	private TextBox gameOver;
+	private boolean ghostChase;
 	
 	private PacMan pacman;
 	private Ghost pinky, blinky, inky, clyde;
@@ -54,6 +57,10 @@ public class Game extends Screen {
 		cap = 10000;
 		
 		eventList = new EventList();
+		events = new ActionTimer();
+		
+		gameOver = new TextBox("Game Over", width() / 2, height() * 41 / 100, Color.WHITE);
+		gameOver.setCentered(true);
 		
 		paused = 0;
 	}
@@ -91,9 +98,9 @@ public class Game extends Screen {
 				this.inky = (Ghost) e;
 			else if (e instanceof Clyde)
 				this.clyde = (Ghost) e;
-			if (e instanceof Dot || e instanceof BigDot)
+			else if (e instanceof Dot || e instanceof BigDot)
 				numDots++;
-			if (e instanceof Fruit)
+			else if (e instanceof Fruit)
 				eventList.add(((Fruit) e).fruitEvent());
 			add(e);
 		}
@@ -124,7 +131,7 @@ public class Game extends Screen {
 		entities.clear();
 		tiles.clear();
 		genEntities();
-		chase(2);
+		tryAgain();
 		
 		ConditionalEvent endGame = new ConditionalEvent();
 		endGame.add(() -> end(), () -> endGame());
@@ -150,7 +157,12 @@ public class Game extends Screen {
 		events.add(() -> board.revert(), .4f);
 		events.add(() -> board.glow(), .4f);
 		events.add(() -> board.revert(), .4f);
+		
 		events.add(() -> start(), .4f);
+	}
+	
+	private void gameOver() {
+		gameOver.setVisible(true);
 	}
 	
 	public void tryAgain() {
@@ -159,15 +171,55 @@ public class Game extends Screen {
 		inky.reset();
 		clyde.reset();
 		pacman.reset();
-		chase(2);
+		chaseDelay(2f);
+		
+		ActionTimer t = new ActionTimer();
+		t.add(() -> setHide(), 20);
+		t.add(() -> setChase(), 7);
+		t.add(() -> setHide(), 20);
+		t.add(() -> setChase(), 7);
+		t.add(() -> setHide(), 20);
+		t.add(() -> setChase(), 7);
+		eventList.add(t);
 	}
 	
-	public void chase(float delays) {
-		events = new ActionTimer();
+	public void chaseDelay(float delays) {
+		events.clear();
 		events.add(() -> blinky.setMode(Ghost.chase), delays);
 		events.add(() -> pinky.setMode(Ghost.chase), delays);
 		events.add(() -> inky.setMode(Ghost.chase), delays);
 		events.add(() -> clyde.setMode(Ghost.chase), delays);
+	}
+	
+	private void setChase() {
+		ghostChase = true;
+		chase(Ghost.scared);
+	}
+	
+	private void setHide() {
+		ghostChase = false;
+		hide(Ghost.scared);
+	}
+	
+	public void returnToChase() {
+		if (ghostChase)
+			chase(-1);
+		else
+			hide(-1);
+	}
+	
+	public void chase(int ifNot) {
+		blinky.setModeIfNot(Ghost.chase, ifNot);
+		pinky.setModeIfNot(Ghost.chase, ifNot);
+		inky.setModeIfNot(Ghost.chase, ifNot);
+		clyde.setModeIfNot(Ghost.chase, ifNot);
+	}
+	
+	public void hide(int ifNot) {
+		blinky.setModeIfNot(Ghost.hide, ifNot);
+		pinky.setModeIfNot(Ghost.hide, ifNot);
+		inky.setModeIfNot(Ghost.hide, ifNot);
+		clyde.setModeIfNot(Ghost.hide, ifNot);
 	}
 	
 	public void scare() {
@@ -179,8 +231,8 @@ public class Game extends Screen {
 		
 		Ghost.resetPoints();
 		
-		events = new ActionTimer();
-		events.add(() -> chase(0), time);
+		events.clear();
+		events.add(() -> returnToChase(), time);
 	}
 	
 	public void kill() {
@@ -190,9 +242,13 @@ public class Game extends Screen {
 		clyde.stop();
 		
 		eventList.pause();
-		events = new ActionTimer();
+		events.clear();
 		events.add(() -> eventList.resume(), 3.5f);
-		events.add(() -> tryAgain(), 0);
+		
+		if (pacman.lives() > 0)
+			events.add(() -> tryAgain(), 0);
+		else
+			events.add(() -> gameOver(), 0);
 	}
 	
 	public void eatDot() {
@@ -280,6 +336,7 @@ public class Game extends Screen {
 //		target.draw(batch, board.tileWidth(), board.tileHeight());
 		score.setLevelAndLives(level, pacman.lives());
 		score.draw(batch);
+		gameOver.draw(batch);
 		lastTime = now;
 	}
 	

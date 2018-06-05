@@ -3,6 +3,7 @@ package com.pacman.entities;
 import java.util.LinkedList;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
@@ -128,6 +129,10 @@ public abstract class Entity implements Drawable {
 	
 	public int dir() {
 		return dir;
+	}
+	
+	public boolean visible() {
+		return visible;
 	}
 	
 	public void setVisible(boolean v) {
@@ -260,6 +265,10 @@ public abstract class Entity implements Drawable {
 	
 	public abstract TextureRegion texture();
 	
+	protected TextureRegion lastTexture() {
+		return lastTexture;
+	}
+	
 	public void draw(Batch batch) {
 		if (!visible)
 			return;
@@ -277,7 +286,7 @@ public abstract class Entity implements Drawable {
 				pos = board().reflectY(pos);
 			else
 				pos = board().reflectX(pos);
-			batch.draw(lastTexture, pos.x(), pos.y());
+			batch.draw(t, pos.x(), pos.y());
 		}
 	}
 	
@@ -331,6 +340,11 @@ public abstract class Entity implements Drawable {
 	private static boolean dir(int position) {
 		return position < 4;
 	}
+	
+	public static final Color pinkyColor = new Color(0xeebcf5ff),
+			blinkyColor = new Color(0xe6000cff),
+			inkyColor = new Color(0x74f5f9ff),
+			clydeColor = new Color(0xf0c572ff);
 	
 	protected TextureRegion pacmanTexture(int position, int phase) {
 		if (phase == 2)

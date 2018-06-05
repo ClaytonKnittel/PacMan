@@ -45,23 +45,23 @@ public class Startup extends Screen {
 		
 		b = new TextureBody(Entity.blinky, 80, 400, 2, false);
 		b.setAnimation(b.WIGGLE_ANIMATION);
-		bn = new TextBox("-Shadow", 130, 400, new Color(0xe6000cff));
-		bnn = new TextBox("\"Blinky\"", 260, 400, new Color(0xe6000cff));
+		bn = new TextBox("-Shadow", 130, 400, Entity.blinkyColor);
+		bnn = new TextBox("\"Blinky\"", 260, 400, Entity.blinkyColor);
 		
 		p = new TextureBody(Entity.pinky, 80, 350, 2, false);
 		p.setAnimation(p.WIGGLE_ANIMATION);
-		pn = new TextBox("-Speedy", 130, 350, new Color(0xeebcf5ff));
-		pnn = new TextBox("\"Pinky\"", 260, 350, new Color(0xeebcf5ff));
+		pn = new TextBox("-Speedy", 130, 350, Entity.pinkyColor);
+		pnn = new TextBox("\"Pinky\"", 260, 350, Entity.pinkyColor);
 		
 		i = new TextureBody(Entity.inky, 80, 300, 2, false);
 		i.setAnimation(i.WIGGLE_ANIMATION);
-		in = new TextBox("-Bashful", 130, 300, new Color(0x74f5f9ff));
-		inn = new TextBox("\"Inky\"", 260, 300, new Color(0x74f5f9ff));
+		in = new TextBox("-Bashful", 130, 300, Entity.inkyColor);
+		inn = new TextBox("\"Inky\"", 260, 300, Entity.inkyColor);
 		
 		c = new TextureBody(Entity.clyde, 80, 250, 2, false);
 		c.setAnimation(c.WIGGLE_ANIMATION);
-		cn = new TextBox("-Pokey", 130, 250, new Color(0xf0c572ff));
-		cnn = new TextBox("\"Clyde\"", 260, 250, new Color(0xf0c572ff));
+		cn = new TextBox("-Pokey", 130, 250, Entity.clydeColor);
+		cnn = new TextBox("\"Clyde\"", 260, 250, Entity.clydeColor);
 		
 		big = new TextureBody(-1, 175, 80, 1, false);
 		big.setTexture(BigDot.texture);

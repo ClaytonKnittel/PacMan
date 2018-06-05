@@ -5,6 +5,7 @@ import tensor.IVector2;
 public class Blinky extends Ghost {
 	
 	private IVector2 startingPos;
+	private static final IVector2 cornerTarget = new IVector2(26, 1);
 	
 	public Blinky(float x, float y) {
 		super(x, y, 13, 13, Entity.blinky);
@@ -54,7 +55,7 @@ public class Blinky extends Ghost {
 	}
 	
 	protected IVector2 cornerTarget() {
-		return IVector2.ZERO;
+		return cornerTarget;
 	}
 	
 }

@@ -13,10 +13,11 @@ public class TextBox implements Drawable {
 	
 	private String text;
 	private int x, y;
-	private float height;
+	private float width, height;
 	private Color c;
 	
 	private boolean visible;
+	private boolean center;
 	
 	static {
 		b = new BitmapFont(Gdx.files.internal("./pacman_font.fnt"), false);
@@ -29,13 +30,19 @@ public class TextBox implements Drawable {
 		this.y = y;
 		this.c = c;
 		visible = false;
+		center = false;
 		
 		g = new GlyphLayout(b, text);
+		width = g.width;
 		height = g.height;
 	}
 	
+	public void setCentered(boolean b) {
+		center = b;
+	}
+	
 	public void setVisible(boolean b) {
-		this.visible = b;
+		visible = b;
 	}
 	
 	public void setPos(int x, int y) {
@@ -46,7 +53,10 @@ public class TextBox implements Drawable {
 	public void draw(Batch b) {
 		if (visible) {
 			TextBox.b.setColor(c);
-			TextBox.b.draw(b, text, x, y + (float) Math.ceil(height) / 2);
+			if (center)
+				TextBox.b.draw(b, text, x - width / 2, y + (float) Math.ceil(height) / 2);
+			else
+				TextBox.b.draw(b, text, x, y + (float) Math.ceil(height) / 2);
 		}
 	}
 	
