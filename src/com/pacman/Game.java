@@ -299,12 +299,10 @@ public class Game extends Screen {
 	
 	public void pauseMin(long millis) {
 		paused -= millis;
-		eventList.addTime(millis);
-		events.setBack(millis);
 		if (paused <= 0) {
 			paused = 0;
-			eventList.resume(0);
-			events.resume(0);
+			eventList.resume();
+			events.resume();
 		}
 	}
 	

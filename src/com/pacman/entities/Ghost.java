@@ -282,7 +282,7 @@ public abstract class Ghost extends Live {
 				pos = board().reflectX(pos);
 			batch.draw(t, pos.x(), pos.y());
 		}
-		path.drawDistLess(batch, 30);
+		//path.drawDistLess(batch, 30);
 	}
 	
 	@Override
