@@ -6,7 +6,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.pacman.graphics.Board;
-import com.pacman.graphics.Path;
 import com.pacman.input.Controller;
 import com.pacman.utils.ActionList;
 import com.pacman.utils.ActionTimer;
@@ -25,7 +24,7 @@ public abstract class Ghost extends Live {
 	
 	private static int points;
 	
-	private Path path;
+	//private Path path;
 	
 	private TextureRegion lastTexture;
 
@@ -39,24 +38,24 @@ public abstract class Ghost extends Live {
 		this.name = name;
 		dead = false;
 		
-		Color c;
-		switch(name) {
-		case Entity.blinky:
-			c = Entity.blinkyColor;
-			break;
-		case Entity.pinky:
-			c = Entity.pinkyColor;
-			break;
-		case Entity.inky:
-			c = Entity.inkyColor;
-			break;
-		case Entity.clyde:
-			c = Entity.clydeColor;
-			break;
-		default:
-			c = Color.WHITE;
-		}
-		path = new Path(c);
+//		Color c;
+//		switch(name) {
+//		case Entity.blinky:
+//			c = Entity.blinkyColor;
+//			break;
+//		case Entity.pinky:
+//			c = Entity.pinkyColor;
+//			break;
+//		case Entity.inky:
+//			c = Entity.inkyColor;
+//			break;
+//		case Entity.clyde:
+//			c = Entity.clydeColor;
+//			break;
+//		default:
+//			c = Color.WHITE;
+//		}
+		//path = new Path(c);
 	}
 	
 	@Override
@@ -205,7 +204,7 @@ public abstract class Ghost extends Live {
 				try {
 					LinkedList<Board.WeightDir> path = graph().shortestPath(pos(), target, prevTile());
 					dir = Entity.opposite(path.getFirst().dir());
-					createPath(path);
+					//createPath(path);
 				} catch (IllegalStateException e) {
 					dir = (int) (Math.random() * 4);
 				}
@@ -214,15 +213,15 @@ public abstract class Ghost extends Live {
 		};
 	}
 	
-	private void createPath(LinkedList<Board.WeightDir> l) {
-		path.clear();
-		IVector2 pos = new IVector2(pos());
-		path.add(board().screenPos(pos));
-		for (Board.WeightDir d : l) {
-			pos = board().newPos(pos, Entity.opposite(d.dir()));
-			path.add(board().screenPos(pos));
-		}
-	}
+//	private void createPath(LinkedList<Board.WeightDir> l) {
+//		path.clear();
+//		IVector2 pos = new IVector2(pos());
+//		path.add(board().screenPos(pos));
+//		for (Board.WeightDir d : l) {
+//			pos = board().newPos(pos, Entity.opposite(d.dir()));
+//			path.add(board().screenPos(pos));
+//		}
+//	}
 	
 	private boolean testReturned(IVector2 target) {
 		if (target.equals(pos())) {
