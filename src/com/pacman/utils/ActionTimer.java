@@ -52,9 +52,13 @@ public class ActionTimer extends Timer implements Event {
 	}
 	
 	public void resume() {
+		resume(System.currentTimeMillis() - pauseTime);
+	}
+	
+	public void resume(long delta) {
 		paused = false;
 		if (actions.size() > 0)
-			setBack(System.currentTimeMillis() - pauseTime);
+			setBack(delta);
 		pauseTime = 0;
 	}
 	

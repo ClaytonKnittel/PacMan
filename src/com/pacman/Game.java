@@ -262,6 +262,7 @@ public class Game extends Screen {
 	public void pause(long millis) {
 		paused = millis;
 		eventList.pause();
+		events.pause();
 	}
 	
 	public void add(int points) {
@@ -302,7 +303,8 @@ public class Game extends Screen {
 		events.setBack(millis);
 		if (paused <= 0) {
 			paused = 0;
-			eventList.resume();
+			eventList.resume(0);
+			events.resume(0);
 		}
 	}
 	
@@ -326,14 +328,11 @@ public class Game extends Screen {
 			
 			tiles.clearDeleted(e -> e.deleted());
 			tiles.actAll((a, b) -> a.interact(b));
-//			if (((Ghost) tar).target() != null)
-//				target.setPos(((Ghost) tar).target());
 		}
 		
 		board.draw(batch);
 		for (Entity e : entities)
 			e.draw(batch);
-//		target.draw(batch, board.tileWidth(), board.tileHeight());
 		score.setLevelAndLives(level, pacman.lives());
 		score.draw(batch);
 		gameOver.draw(batch);

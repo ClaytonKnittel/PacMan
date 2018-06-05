@@ -35,7 +35,11 @@ public class EventList {
 	}
 	
 	public void resume() {
-		addTime(System.currentTimeMillis() - pauseTime);
+		resume(System.currentTimeMillis() - pauseTime);
+	}
+	
+	public void resume(long delta) {
+		addTime(delta);
 		paused = false;
 	}
 	
